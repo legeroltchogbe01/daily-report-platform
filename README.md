@@ -49,6 +49,13 @@ Cliquez sur votre **badge de profil** (nom + initiales) en haut à droite du tab
 
 Le tableau de bord Manager permet d'orchestrer le travail et de suivre l'avancement :
 
+* **Tableau de Bord Admin Suprême & Statistiques** :
+  * Dans le menu latéral, cliquez sur **Statistiques Admin** pour consulter les métriques globales en temps réel :
+    * 👥 Nombre total d'utilisateurs inscrits (répartition Managers vs Employés).
+    * 📁 Nombre de projets (en cours / archivés).
+    * 📋 Nombre de rapports journaliers soumis et commentaires rédigés.
+    * 💬 Nombre total de messages échangés et de fichiers téléversés.
+    * 📋 Registre complet de tous les utilisateurs (ID, nom, rôle, matricule).
 * **Créer un Projet** :
   * Cliquez sur **Nouveau Projet**, saisissez le nom, le cahier des charges initial, et sélectionnez les employés à assigner via leur matricule.
 * **Gérer le Cahier des Charges** :

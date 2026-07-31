@@ -1005,6 +1005,89 @@ app.delete('/api/me', async (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/admin/stats', async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'boss') {
+    return res.status(403).json({ error: 'Accès refusé' });
+  }
+
+  try {
+    if (useDb) {
+      const uRes = await queryDb('SELECT id, username, role, matricule FROM users ORDER BY id ASC');
+      const pRes = await queryDb('SELECT archived, messages, files FROM projects');
+      const rRes = await queryDb('SELECT COUNT(*) FROM reports');
+      const cRes = await queryDb('SELECT COUNT(*) FROM comments');
+
+      const userList = uRes.rows;
+      const totalUsers = userList.length;
+      const bossCount = userList.filter(u => u.role === 'boss').length;
+      const employeeCount = userList.filter(u => u.role === 'employee').length;
+
+      const totalProjects = pRes.rows.length;
+      const activeProjects = pRes.rows.filter(p => !p.archived).length;
+      const archivedProjects = pRes.rows.filter(p => p.archived).length;
+
+      let totalMessages = 0;
+      let totalFiles = 0;
+      pRes.rows.forEach(p => {
+        const msgs = Array.isArray(p.messages) ? p.messages : [];
+        const files = Array.isArray(p.files) ? p.files : [];
+        totalMessages += msgs.length;
+        totalFiles += files.length;
+      });
+
+      res.json({
+        totalUsers,
+        bossCount,
+        employeeCount,
+        totalProjects,
+        activeProjects,
+        archivedProjects,
+        totalReports: parseInt(rRes.rows[0].count, 10) || 0,
+        totalComments: parseInt(cRes.rows[0].count, 10) || 0,
+        totalMessages,
+        totalFiles,
+        userList
+      });
+    } else {
+      const userList = users.map(u => ({ id: u.id, username: u.username, role: u.role, matricule: u.matricule }));
+      const totalUsers = userList.length;
+      const bossCount = userList.filter(u => u.role === 'boss').length;
+      const employeeCount = userList.filter(u => u.role === 'employee').length;
+
+      const totalProjects = projects.length;
+      const activeProjects = projects.filter(p => !p.archived).length;
+      const archivedProjects = projects.filter(p => p.archived).length;
+
+      const totalReports = reports.length;
+      const totalComments = comments.length;
+
+      let totalMessages = 0;
+      let totalFiles = 0;
+      projects.forEach(p => {
+        totalMessages += (p.messages || []).length;
+        totalFiles += (p.files || []).length;
+      });
+
+      res.json({
+        totalUsers,
+        bossCount,
+        employeeCount,
+        totalProjects,
+        activeProjects,
+        archivedProjects,
+        totalReports,
+        totalComments,
+        totalMessages,
+        totalFiles,
+        userList
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching admin stats:', err);
+    res.status(500).json({ error: 'Erreur lors de la récupération des statistiques.' });
+  }
+});
+
 app.get('/api/users', async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'boss') return res.status(403).json({ error: 'Accès refusé' });
   const usersList = await getEmployeeUsers(req.session.user.username);

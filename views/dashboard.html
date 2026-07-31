@@ -1290,6 +1290,12 @@
         </svg>
         Archives
       </button>
+      <button class="nav-btn" id="navStats" onclick="enterTab('stats')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Statistiques Admin
+      </button>
 
       <!-- Mobile-only logout button inside nav section -->
       <button class="nav-btn mobile-logout-btn" onclick="logout()" style="display:none; color:var(--danger); margin-top:20px; background:rgba(239, 68, 68, 0.06); border:1px solid rgba(239, 68, 68, 0.15); border-radius:var(--radius-sm);">
@@ -1750,8 +1756,13 @@ async function init() {
   if (mobName)   mobName.textContent   = name;
   if (mobRole)   mobRole.textContent   = roleLabel;
 
-  // Show employees nav if boss
-  if (role === 'boss') document.getElementById('navEmployees').style.display = '';
+  // Show employees & stats nav if boss
+  if (role === 'boss') {
+    const navEmp = document.getElementById('navEmployees');
+    const navSts = document.getElementById('navStats');
+    if (navEmp) navEmp.style.display = '';
+    if (navSts) navSts.style.display = '';
+  }
 
   // Prefs
   const prefs = loadPrefs();
@@ -1817,7 +1828,7 @@ async function enterTab(name) {
   stopPolling();
 
   // Update sidebar active state
-  ['projects','employees','archive'].forEach(t => {
+  ['projects','employees','archive','stats'].forEach(t => {
     const btn = document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1));
     if (btn) btn.classList.toggle('active', t === name);
   });
@@ -1825,6 +1836,7 @@ async function enterTab(name) {
   const main = document.getElementById('mainContent');
   if (name === 'employees') await renderEmployees(main);
   else if (name === 'archive') await renderArchive(main);
+  else if (name === 'stats') await renderAdminStats(main);
   else await renderProjects(main);
 
   startSoftPolling();
@@ -1871,6 +1883,138 @@ async function renderEmployees(host) {
     </div>
     ${grid}
   `;
+}
+
+/* =====================================================================
+   ADMIN STATS DASHBOARD (BOSS ONLY)
+   ===================================================================== */
+async function renderAdminStats(host) {
+  host.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">📊 Tableau de Bord Admin Suprême</div>
+        <div class="page-subtitle">Statistiques globales et métriques d'utilisation de la plateforme</div>
+      </div>
+    </div>
+    <div class="loading-box"><div class="loading-ring"></div>Chargement des statistiques…</div>
+  `;
+
+  try {
+    const res = await fetch('/api/admin/stats');
+    if (!res.ok) {
+      host.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Accès refusé</div><div class="empty-desc">Seul le manager principal a accès à cette section.</div></div>`;
+      return;
+    }
+    const s = await res.json();
+
+    const empPct = s.totalUsers > 0 ? Math.round((s.employeeCount / s.totalUsers) * 100) : 0;
+    const bossPct = s.totalUsers > 0 ? Math.round((s.bossCount / s.totalUsers) * 100) : 0;
+
+    host.innerHTML = `
+      <div class="page-header">
+        <div>
+          <div class="page-title">📊 Tableau de Bord Admin Suprême</div>
+          <div class="page-subtitle">Statistiques globales de la plateforme en temps réel</div>
+        </div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:28px;">
+        <div class="stat-kpi-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">Utilisateurs totaux</span>
+            <span style="font-size:1.4rem;">👥</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; color:var(--text-1); line-height:1.2;">${s.totalUsers}</div>
+          <div style="font-size:0.75rem; color:var(--text-2); margin-top:6px;">${s.bossCount} Managers · ${s.employeeCount} Employés</div>
+        </div>
+
+        <div class="stat-kpi-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">Projets enregistrés</span>
+            <span style="font-size:1.4rem;">📁</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; color:var(--primary-light); line-height:1.2;">${s.totalProjects}</div>
+          <div style="font-size:0.75rem; color:var(--text-2); margin-top:6px;">${s.activeProjects} Actifs · ${s.archivedProjects} Archivés</div>
+        </div>
+
+        <div class="stat-kpi-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">Rapports soumis</span>
+            <span style="font-size:1.4rem;">📋</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; color:var(--success); line-height:1.2;">${s.totalReports}</div>
+          <div style="font-size:0.75rem; color:var(--text-2); margin-top:6px;">${s.totalComments} commentaire${s.totalComments>1?'s':''} associé${s.totalComments>1?'s':''}</div>
+        </div>
+
+        <div class="stat-kpi-card" style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">Messages & Fichiers</span>
+            <span style="font-size:1.4rem;">💬</span>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; color:#a78bfa; line-height:1.2;">${s.totalMessages}</div>
+          <div style="font-size:0.75rem; color:var(--text-2); margin-top:6px;">${s.totalFiles} fichier${s.totalFiles>1?'s':''} partagé${s.totalFiles>1?'s':''}</div>
+        </div>
+      </div>
+
+      <!-- User Distribution Bar -->
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:20px; margin-bottom:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-size:0.9rem; font-weight:700; color:var(--text-1);">Répartition des Comptes (${s.totalUsers} au total)</span>
+          <span style="font-size:0.8rem; color:var(--text-3);">${s.bossCount} Manager(s) · ${s.employeeCount} Employé(s)</span>
+        </div>
+        <div style="height:12px; width:100%; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; display:flex;">
+          <div style="width:${bossPct}%; background:linear-gradient(90deg, #6366f1, #818cf8);" title="Managers: ${s.bossCount} (${bossPct}%)"></div>
+          <div style="width:${empPct}%; background:linear-gradient(90deg, #10b981, #34d399);" title="Employés: ${s.employeeCount} (${empPct}%)"></div>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:10px; font-size:0.75rem; color:var(--text-2);">
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#6366f1; border-radius:3px;"></span> Managers (${bossPct}%)</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#10b981; border-radius:3px;"></span> Employés (${empPct}%)</span>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:16px; padding:20px; overflow-x:auto;">
+        <div style="font-size:0.95rem; font-weight:700; color:var(--text-1); margin-bottom:16px;">Registre Complet des Utilisateurs (${(s.userList||[]).length})</div>
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--glass-border); color:var(--text-3);">
+              <th style="padding:10px 12px;">ID</th>
+              <th style="padding:10px 12px;">Utilisateur</th>
+              <th style="padding:10px 12px;">Rôle</th>
+              <th style="padding:10px 12px;">Matricule</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(s.userList || []).map(u => `
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                <td style="padding:10px 12px; color:var(--text-3); font-family:monospace;">#${u.id}</td>
+                <td style="padding:10px 12px; font-weight:600; color:var(--text-1);">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">
+                      ${esc((u.username||'U').slice(0,2).toUpperCase())}
+                    </div>
+                    ${esc(u.username)}
+                  </div>
+                </td>
+                <td style="padding:10px 12px;">
+                  <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:700; ${u.role==='boss'?'background:rgba(99,102,241,0.15); color:var(--primary-light); border:1px solid rgba(99,102,241,0.3);':'background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.3);'}">
+                    ${u.role === 'boss' ? 'Manager' : 'Employé'}
+                  </span>
+                </td>
+                <td style="padding:10px 12px; font-family:monospace; color:${u.matricule?'var(--text-2)':'var(--text-3)'};">
+                  ${esc(u.matricule || '—')}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    console.error(err);
+    host.innerHTML = `<div class="empty-state"><div class="empty-icon">✕</div><div class="empty-title">Erreur de chargement</div><div class="empty-desc">Impossible de charger les statistiques.</div></div>`;
+  }
 }
 
 /* =====================================================================
