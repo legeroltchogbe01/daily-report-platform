@@ -181,6 +181,40 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(UPLOAD_DIR));
+
+// TEMPORARY ENDPOINT TO RESET DB
+app.get('/api/admin/reset-db', async (req, res) => {
+  try {
+    if (useDb) {
+      await queryDb('TRUNCATE TABLE projects CASCADE');
+      await queryDb('TRUNCATE TABLE reports CASCADE');
+      await queryDb('TRUNCATE TABLE comments CASCADE');
+      await queryDb('TRUNCATE TABLE users CASCADE');
+      
+      const count = await queryDb('SELECT COUNT(*) FROM users');
+      if (Number(count.rows[0].count) === 0) {
+        for (const u of defaultUsers) {
+          await queryDb('INSERT INTO users (id, username, salt, hash, role, matricule) VALUES ($1, $2, $3, $4, $5, $6)',
+            [u.id, u.username, u.salt, u.hash, u.role, u.matricule]);
+        }
+      }
+    } else {
+      saveJson(PROJECTS_FILE, []);
+      saveJson(REPORTS_FILE, []);
+      saveJson(COMMENTS_FILE, []);
+      saveJson(USERS_FILE, defaultUsers);
+      projects.length = 0;
+      reports.length = 0;
+      comments.length = 0;
+      users.length = 0;
+      defaultUsers.forEach(u => users.push(u));
+    }
+    res.send('Base de données remise à zéro ! <br><a href="/">Retour à l\'accueil</a>');
+  } catch (e) {
+    res.status(500).send('Erreur: ' + e.message);
+  }
+});
+
 app.use(session({
   secret: 'daily-report-secret',
   resave: false,
