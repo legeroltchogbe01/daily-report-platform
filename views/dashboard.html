@@ -1076,8 +1076,12 @@
     }
     @media (max-width: 640px) {
       .main { padding: 16px; min-width: 0; }
+      .detail-header { padding: 16px; }
       .detail-top { flex-direction: column; }
       .detail-actions { width: 100%; }
+      .detail-title { font-size: 1.2rem; }
+
+      /* Chat input */
       .msg-input-row { gap: 6px !important; }
       #msgSendBtn {
         width: 38px;
@@ -1089,26 +1093,20 @@
         align-items: center;
         justify-content: center;
       }
-      #msgSendBtn svg {
-        margin: 0 !important;
-        width: 15px;
-        height: 15px;
-      }
+      #msgSendBtn svg { margin: 0 !important; width: 15px; height: 15px; }
       .send-btn-text { display: none !important; }
+      .messages-list { max-height: 320px; }
+
+      /* File upload */
       .upload-btn-row {
         flex-direction: column;
         align-items: flex-start !important;
         width: 100%;
       }
-      .upload-btn-row button {
-        width: 100%;
-        justify-content: center;
-      }
-      .upload-btn-row .text-formats {
-        font-size: 0.72rem;
-        margin-top: 4px;
-        line-height: 1.4;
-      }
+      .upload-btn-row button { width: 100%; justify-content: center; }
+      .upload-btn-row .text-formats { font-size: 0.72rem; margin-top: 4px; line-height: 1.4; }
+
+      /* Notifications panel */
       .bell-panel {
         position: fixed;
         left: 10px !important;
@@ -1117,6 +1115,35 @@
         width: calc(100vw - 20px) !important;
         max-height: 70vh !important;
       }
+
+      /* Toast notifications */
+      .toast-host { right: 10px; left: 10px; bottom: 16px; max-width: calc(100vw - 20px); }
+      .toast { min-width: 0; width: 100%; }
+
+      /* Modals */
+      .modal { padding: 20px; border-radius: var(--radius-lg); }
+      .modal-title { font-size: 1rem; }
+      .modal-actions { flex-wrap: wrap; }
+      .modal-actions button { flex: 1; min-width: 120px; justify-content: center; }
+    }
+
+    /* Extra small devices: iPhone SE (375px), Galaxy A series (360px), small Androids (320px) */
+    @media (max-width: 400px) {
+      .main { padding: 12px; }
+      .detail-header { padding: 12px; }
+      .detail-title { font-size: 1.05rem; }
+      .glass-card { padding: 14px; }
+      .modal { padding: 14px; }
+      .modal-title { font-size: 0.95rem; margin-bottom: 14px; }
+      .messages-list { max-height: 260px; }
+      .sub-tab { padding: 7px 10px; font-size: 0.78rem; min-width: 64px; }
+      .bell-header { padding: 10px 12px 8px; }
+      .bell-header h4 { font-size: 0.82rem; }
+      .page-title { font-size: 1.15rem; }
+      .file-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+      .empty-state { padding: 30px 10px; }
+      .attach-btn, .btn-icon { width: 34px !important; height: 34px !important; font-size: 1rem !important; }
+      input[type="file"] { font-size: 0.75rem; }
     }
 
     .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
