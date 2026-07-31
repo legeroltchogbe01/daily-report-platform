@@ -9,15 +9,11 @@ L'application arbore une interface **Cyber-Obsidian & Émeraude** à fort contra
 ## 📖 Guide d'Utilisation de la Plateforme
 
 ### 1. Rôles et Connexion
-L'application propose deux profils d'utilisateurs distincts. Les identifiants par défaut après installation sont :
-* **Manager (Chef d'équipe)** : 
-  * Identifiant : `boss`
-  * Mot de passe : `1234`
-* **Employé** : 
-  * Identifiants : `employee1` ou `employee2`
-  * Mot de passe : `1234`
+L'application propose deux profils d'utilisateurs distincts :
+* **Manager (Chef d'équipe)** : Gère le cahier des charges, crée les projets, suit les rapports de l'équipe et archive les projets clos.
+* **Employé** : Rédige et soumet ses rapports journaliers, dialogue sur la messagerie projet, et verse les pièces jointes des livrables.
 
-*Note : Les utilisateurs peuvent s'inscrire d'eux-mêmes comme Employés via le lien "Créer un compte" sur l'écran de connexion.*
+*Note : Les utilisateurs peuvent s'inscrire librement comme Employés via le lien "Créer un compte" sur l'écran de connexion.*
 
 ### 2. Sécurité du Compte (Changement de mot de passe)
 Pour modifier votre mot de passe à tout moment :
