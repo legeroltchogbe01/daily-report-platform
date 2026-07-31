@@ -1729,6 +1729,18 @@ async function init() {
     sidebar.classList.remove('mobile-open');
   });
 
+  // Welcome message — shown once per session
+  const welcomeKey = 'welcome_shown_' + name;
+  if (!sessionStorage.getItem(welcomeKey)) {
+    sessionStorage.setItem(welcomeKey, '1');
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne après-midi' : 'Bonsoir';
+    const roleMsg  = role === 'boss'
+      ? 'Votre tableau de bord Manager est prêt.'
+      : 'Vos projets assignés vous attendent.';
+    setTimeout(() => notify('success', `${greeting}, ${name} ! 👋`, roleMsg), 600);
+  }
+
   await enterTab('projects');
 }
 
