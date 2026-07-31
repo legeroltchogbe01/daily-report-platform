@@ -1582,6 +1582,22 @@ function openProfileModal() {
         <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour le mot de passe</button>
       </div>
     </div>
+
+    <!-- Section : Zone de danger -->
+    ${state.user.username !== 'boss' ? `
+    <div style="border-top: 1px solid rgba(239,68,68,0.3); margin: 20px 0 0; padding-top: 16px;">
+      <h5 style="color:var(--danger); margin-bottom:8px; font-size:0.9rem;">⚠️ Zone de danger</h5>
+      <p style="color:var(--text-3); font-size:0.8rem; margin-bottom:12px;">La suppression de votre compte est irréversible. Vos rapports et commentaires seront supprimés. Vos messages dans les projets resteront visibles.</p>
+      <div class="field" style="margin-bottom:10px;">
+        <label style="color:var(--danger);">Confirmez votre mot de passe pour supprimer</label>
+        <input type="password" id="profile-delete-pw" placeholder="Votre mot de passe" style="width:100%; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
+      </div>
+      <div class="modal-error" id="profile-delete-err"></div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn" onclick="submitDeleteAccount()" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:var(--danger); padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Supprimer mon compte</button>
+      </div>
+    </div>
+    ` : ''}
   `);
 }
 
@@ -1663,6 +1679,39 @@ async function submitChangeUsername() {
     if (curName) curName.textContent = data.username;
     errEl.style.color = 'var(--success)';
     errEl.textContent = '✓ Nom mis à jour avec succès !';
+  } catch (err) {
+    errEl.textContent = 'Impossible de contacter le serveur.';
+  }
+}
+
+async function submitDeleteAccount() {
+  const passwordInput = document.getElementById('profile-delete-pw');
+  const errEl = document.getElementById('profile-delete-err');
+  if (!passwordInput || !errEl) return;
+  const password = passwordInput.value;
+  errEl.textContent = '';
+
+  if (!password) {
+    errEl.textContent = 'Veuillez saisir votre mot de passe.';
+    return;
+  }
+
+  // Double confirmation
+  if (!confirm(`⚠️ Êtes-vous absolument sûr de vouloir supprimer votre compte "${state.user.username}" ? Cette action est irréversible.`)) return;
+
+  try {
+    const res = await fetch('/api/me', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Erreur lors de la suppression.';
+      return;
+    }
+    // Redirect to login
+    window.location.href = '/';
   } catch (err) {
     errEl.textContent = 'Impossible de contacter le serveur.';
   }

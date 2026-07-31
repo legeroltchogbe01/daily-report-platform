@@ -937,6 +937,74 @@ app.post('/api/change-password', async (req, res) => {
   res.json({ success: true });
 });
 
+app.delete('/api/me', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'Non connecté' });
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Le mot de passe est requis pour confirmer la suppression.' });
+
+  const user = await fetchUser(req.session.user.username);
+  if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+
+  // Protect the main boss account
+  if (user.username === 'boss') {
+    return res.status(403).json({ error: 'Le compte administrateur principal ne peut pas être supprimé.' });
+  }
+
+  if (!verifyPassword(password, user)) {
+    return res.status(400).json({ error: 'Mot de passe incorrect.' });
+  }
+
+  const username = user.username;
+
+  if (useDb) {
+    // Remove user from all projects (assigned_employees, status_by_employee, etc.)
+    const allProj = await queryDb('SELECT * FROM projects');
+    for (let p of allProj.rows) {
+      let changed = false;
+      let assigned = p.assigned_employees || [];
+      if (assigned.includes(username)) {
+        assigned = assigned.filter(a => a !== username);
+        p.assigned_employees = assigned;
+        changed = true;
+      }
+      let statuses = p.status_by_employee || {};
+      if (statuses[username]) { delete statuses[username]; p.status_by_employee = statuses; changed = true; }
+      if (changed) {
+        await queryDb(
+          'UPDATE projects SET assigned_employees = $1, status_by_employee = $2 WHERE id = $3',
+          [JSON.stringify(p.assigned_employees), JSON.stringify(p.status_by_employee), p.id]
+        );
+      }
+    }
+    // Delete user's reports and comments
+    await queryDb('DELETE FROM reports WHERE employee = $1', [username]);
+    await queryDb('DELETE FROM comments WHERE author = $1', [username]);
+    // Delete the user
+    await queryDb('DELETE FROM users WHERE id = $1', [user.id]);
+  } else {
+    // Remove from projects
+    projects.forEach(p => {
+      if (p.assignedEmployees) p.assignedEmployees = p.assignedEmployees.filter(a => a !== username);
+      if (p.statusByEmployee) delete p.statusByEmployee[username];
+    });
+    saveProjects();
+    // Delete reports
+    const remainReports = reports.filter(r => r.employee !== username);
+    reports.length = 0; remainReports.forEach(r => reports.push(r));
+    saveJson(REPORTS_FILE, reports);
+    // Delete comments
+    const remainComments = comments.filter(c => c.author !== username);
+    comments.length = 0; remainComments.forEach(c => comments.push(c));
+    saveJson(COMMENTS_FILE, comments);
+    // Delete user
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx !== -1) { users.splice(idx, 1); saveJson(USERS_FILE, users); }
+  }
+
+  req.session.destroy();
+  res.json({ success: true });
+});
+
 app.get('/api/users', async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'boss') return res.status(403).json({ error: 'Accès refusé' });
   const usersList = await getEmployeeUsers(req.session.user.username);
