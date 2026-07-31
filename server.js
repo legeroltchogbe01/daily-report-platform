@@ -397,7 +397,7 @@ const getEmployeeUsers = async (bossUsername = null) => {
       const sql = `
         SELECT DISTINCT u.id, u.username, u.matricule 
         FROM users u
-        JOIN projects p ON u.username = ANY(p.assigned_employees)
+        JOIN projects p ON p.assigned_employees @> jsonb_build_array(u.username)
         WHERE u.role = 'employee' AND p.manager = $1
         ORDER BY u.username
       `;
