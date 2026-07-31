@@ -322,68 +322,126 @@
   <div class="blob blob-3"></div>
 
   <div class="card">
-    <div class="hero">
-      <div class="hero-icon">📊</div>
-      <h1>Daily Report</h1>
-      <p>Espace de suivi des rapports journaliers et des projets d'équipe.</p>
+    <!-- Screen 1: Welcome/Landing View -->
+    <div id="landingView">
+      <div class="hero">
+        <div class="hero-icon">📊</div>
+        <h1>Daily Report</h1>
+        <p>Espace de suivi des rapports journaliers et des projets d'équipe.</p>
+      </div>
+      
+      <div class="landing-body" style="padding: 20px 28px 24px;">
+        <div class="feature-list" style="margin-bottom: 20px;">
+          <div class="feature-item" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);">
+            <span style="font-size:1.3rem; flex-shrink:0;">📋</span>
+            <div>
+              <div style="font-size:0.83rem; font-weight:700; color:var(--text-1);">Suivi de Projets</div>
+              <div style="font-size:0.75rem; color:var(--text-3); margin-top:2px; line-height:1.4;">Suivez les tâches et cahiers des charges en temps réel.</div>
+            </div>
+          </div>
+          <div class="feature-item" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);">
+            <span style="font-size:1.3rem; flex-shrink:0;">📝</span>
+            <div>
+              <div style="font-size:0.83rem; font-weight:700; color:var(--text-1);">Rapports Journaliers</div>
+              <div style="font-size:0.75rem; color:var(--text-3); margin-top:2px; line-height:1.4;">Rédigez et déposez vos rapports de fin de journée.</div>
+            </div>
+          </div>
+          <div class="feature-item" style="display:flex; align-items:center; gap:12px; margin-bottom:12px; background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);">
+            <span style="font-size:1.3rem; flex-shrink:0;">💬</span>
+            <div>
+              <div style="font-size:0.83rem; font-weight:700; color:var(--text-1);">Messagerie & Fichiers</div>
+              <div style="font-size:0.75rem; color:var(--text-3); margin-top:2px; line-height:1.4;">Discutez et partagez des pièces jointes en direct.</div>
+            </div>
+          </div>
+        </div>
+        
+        <button class="btn-primary" onclick="showLoginForm()" style="margin-top:4px;">
+          <span class="btn-label">Accéder à la plateforme</span>
+        </button>
+      </div>
     </div>
 
-    <div class="form-body">
-      <div class="form-title" id="formTitle">Connexion</div>
-
-      <div class="field">
-        <label for="username">Nom d'utilisateur</label>
-        <div class="input-wrap">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-          </svg>
-          <input id="username" type="text" placeholder="ex: employee1" autocomplete="username" />
+    <!-- Screen 2: Login/Register Form View -->
+    <div id="formView" style="display:none; animation: fade-in 200ms ease;">
+      <div class="hero" style="padding: 16px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="hero-icon" style="width:32px; height:32px; font-size:1rem; margin-bottom:0; box-shadow:none; border-radius:8px;">📊</div>
+          <h2 style="font-size:1.1rem; font-weight:800; color:var(--text-1);">Daily Report</h2>
         </div>
+        <button onclick="showLandingView()" style="background:none; border:none; color:var(--primary-light); position:relative; font-size:0.8rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; display:flex; align-items:center; gap:4px; transition:color 150ms ease;">
+          ← Retour
+        </button>
       </div>
 
-      <div class="field">
-        <label for="password">Mot de passe</label>
-        <div class="input-wrap">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <input id="password" type="password" placeholder="Minimum 4 caractères" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter') submitForm()" />
-          <button type="button" class="toggle-pw" id="togglePw" aria-label="Afficher / masquer le mot de passe">
-            <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+      <div class="form-body">
+        <div class="form-title" id="formTitle">Connexion</div>
+
+        <div class="field">
+          <label for="username">Nom d'utilisateur</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
-            <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.94 19.94 0 0 1 4.22-5.32"/>
-              <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a19.86 19.86 0 0 1-3.17 4.19"/>
-              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-          </button>
+            <input id="username" type="text" placeholder="ex: employee1" autocomplete="username" />
+          </div>
         </div>
-      </div>
 
-      <button class="btn-primary" id="actionBtn" onclick="submitForm()">
-        <span class="btn-label" id="btnLabel">Se connecter</span>
-        <div class="spinner" id="spinner"></div>
-      </button>
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="password" type="password" placeholder="Minimum 4 caractères" autocomplete="current-password"
+              onkeydown="if(event.key==='Enter') submitForm()" />
+            <button type="button" class="toggle-pw" id="togglePw" aria-label="Afficher / masquer le mot de passe">
+              <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.94 19.94 0 0 1 4.22-5.32"/>
+                <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a19.86 19.86 0 0 1-3.17 4.19"/>
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-      <div class="msg" id="message"></div>
+        <button class="btn-primary" id="actionBtn" onclick="submitForm()">
+          <span class="btn-label" id="btnLabel">Se connecter</span>
+          <div class="spinner" id="spinner"></div>
+        </button>
 
-      <div class="divider">
-        <div class="divider-line"></div>
-        <span class="divider-text">ou</span>
-        <div class="divider-line"></div>
-      </div>
+        <div class="msg" id="message"></div>
 
-      <div class="switch-row">
-        <span id="switchText">Pas encore de compte ?</span>
-        <button id="toggleBtn" onclick="toggleMode()">Créer un compte</button>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">ou</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="switch-row">
+          <span id="switchText">Pas encore de compte ?</span>
+          <button id="toggleBtn" onclick="toggleMode()">Créer un compte</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     let registerMode = false;
+
+    function showLoginForm() {
+      document.getElementById('landingView').style.display = 'none';
+      document.getElementById('formView').style.display = 'block';
+    }
+
+    function showLandingView() {
+      document.getElementById('landingView').style.display = 'block';
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('message').textContent = '';
+      document.getElementById('message').className = 'msg';
+    }
 
     /* --- Password toggle --- */
     document.getElementById('togglePw').addEventListener('click', () => {

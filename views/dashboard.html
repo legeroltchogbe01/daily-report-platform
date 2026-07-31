@@ -1220,6 +1220,28 @@ const seenFor   = pid => state.lastSeen[pid] || { cahierAt:'', msgCount:0, fileC
 /* =====================================================================
    UTILS
    ===================================================================== */
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    const now = ctx.currentTime;
+    osc.frequency.setValueAtTime(523.25, now); // C5
+    osc.frequency.setValueAtTime(659.25, now + 0.12); // E5
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  } catch (err) {
+    console.warn('Audio play failed:', err);
+  }
+}
 const fmtDate = iso => {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -1269,6 +1291,11 @@ function notify(level, title, desc, opts = {}) {
   saveNotifs(hist);
   renderBell();
 
+  // Play notification chime
+  if (!opts.silent) {
+    playNotificationSound();
+  }
+
   // Toast
   const host = document.getElementById('toastHost');
   const node = document.createElement('div');
@@ -1306,6 +1333,16 @@ function renderBell() {
     badge.textContent = unread > 99 ? '99+' : String(unread);
     badge.style.display = unread > 0 ? '' : 'none';
   }
+
+  // PWA App Badging API for smartphone icon
+  if ('setAppBadge' in navigator) {
+    if (unread > 0) {
+      navigator.setAppBadge(unread).catch(err => console.warn('Badge error:', err));
+    } else {
+      navigator.clearAppBadge().catch(err => console.warn('Badge error:', err));
+    }
+  }
+
   // Update sidebar badge
   const pb = document.getElementById('projBadge');
   if (pb) {
