@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <!-- Icon Glow Gradient -->
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+  <!-- Rounded Background -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <!-- Glowing circle behind -->
+  <circle cx="256" cy="256" r="160" fill="url(#glowGrad)" opacity="0.15" />
+  
+  <!-- Document / Folder Icon Structure -->
+  <g filter="url(#shadow)" transform="translate(136, 120)">
+    <!-- Document Page Backing -->
+    <rect x="0" y="0" width="240" height="280" rx="24" fill="#ffffff" />
+    <!-- Top folded corner decoration -->
+    <path d="M 180 0 L 240 60 L 240 0 Z" fill="#e2e8f0" />
+    <!-- Lines of report -->
+    <rect x="40" y="80" width="160" height="16" rx="8" fill="#cbd5e1" />
+    <rect x="40" y="120" width="120" height="16" rx="8" fill="#cbd5e1" />
+    
+    <!-- Giant Green/Cyan Checkmark overlapping on right-bottom -->
+    <circle cx="200" cy="220" r="56" fill="#10b981" />
+    <path d="M 176 220 L 192 236 L 224 204" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

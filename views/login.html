@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion – Daily Report Platform</title>
+  <meta name="description" content="Accédez à votre espace de suivi des rapports journaliers et des projets d'équipe." />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #080d16;
+      --bg-mid:  #0d1527;
+      --glass:   rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(45, 212, 191, 0.08);
+      --primary: #14b8a6;
+      --primary-glow: rgba(20, 184, 166, 0.35);
+      --primary-hover: #2dd4bf;
+      --accent:  #a855f7;
+      --text-1:  #f8fafc;
+      --text-2:  #e2e8f0;
+      --text-3:  #94a3b8;
+      --success: #10b981;
+      --danger:  #f43f5e;
+      --input-bg: rgba(255,255,255,0.06);
+      --input-border: rgba(255,255,255,0.12);
+      --input-focus: rgba(20, 184, 166, 0.5);
+      --shadow-xl: 0 25px 80px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 60px rgba(20, 184, 166, 0.15);
+    }
+
+    html { font-family: 'Inter', system-ui, sans-serif; color-scheme: dark; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Animated background blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      animation: float 12s ease-in-out infinite;
+    }
+    .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(20,184,166,0.25), transparent 70%); top: -150px; right: -100px; animation-delay: 0s; }
+    .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(168,85,247,0.12), transparent 70%); bottom: -100px; left: -80px; animation-delay: -6s; }
+    .blob-3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50%       { transform: translateY(-30px) scale(1.05); }
+    }
+    .blob-3 { animation-name: float3; }
+    @keyframes float3 {
+      0%, 100% { transform: translate(-50%,-50%) scale(1); }
+      50%       { transform: translate(-50%,-60%) scale(1.1); }
+    }
+
+    /* Grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      width: min(460px, 100%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow-xl), var(--shadow-glow);
+      overflow: hidden;
+      animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+      backdrop-filter: blur(20px);
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Hero header */
+    .hero {
+      padding: 24px 28px 18px;
+      background: linear-gradient(135deg, rgba(20,184,166,0.2), rgba(20,184,166,0.05));
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(20,184,166,0.3), transparent 60%);
+    }
+    .hero-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px var(--primary-glow);
+      position: relative;
+    }
+    .hero h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-1);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      position: relative;
+    }
+    .hero p {
+      margin-top: 6px;
+      color: var(--text-2);
+      font-size: 0.85rem;
+      font-weight: 400;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    /* Form area */
+    .form-body {
+      padding: 20px 28px 24px;
+    }
+
+    .form-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-3);
+      pointer-events: none;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      padding: 10px 12px 10px 40px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+      -webkit-appearance: none;
+    }
+    input:focus {
+      border-color: var(--primary);
+      background: rgba(99,102,241,0.08);
+      box-shadow: 0 0 0 3px var(--input-focus);
+    }
+    input::placeholder { color: var(--text-3); }
+    input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 100px rgba(10,12,28,0.95) inset !important;
+      -webkit-text-fill-color: var(--text-1) !important;
+    }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      transition: color 150ms ease, background 150ms ease;
+    }
+    .toggle-pw:hover { color: var(--text-2); background: rgba(255,255,255,0.06); }
+    .toggle-pw svg { width: 18px; height: 18px; }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 4px;
+      padding: 11px 18px;
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+      box-shadow: 0 4px 24px var(--primary-glow);
+      letter-spacing: 0.01em;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--primary-glow); filter: brightness(1.05); }
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-primary .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    .btn-primary.loading .btn-label { display: none; }
+    .btn-primary.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .msg {
+      min-height: 20px;
+      margin-top: 10px;
+      font-size: 0.83rem;
+      font-weight: 500;
+      text-align: center;
+      border-radius: 10px;
+      padding: 0;
+      transition: all 200ms ease;
+    }
+    .msg.error { color: var(--danger); background: rgba(239,68,68,0.1); padding: 10px 14px; }
+    .msg.success { color: var(--success); background: rgba(16,185,129,0.1); padding: 10px 14px; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 0 12px;
+    }
+    .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    .divider-text { font-size: 0.75rem; color: var(--text-3); white-space: nowrap; }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text-2);
+    }
+    .switch-row button {
+      background: none;
+      border: none;
+      color: var(--primary-hover);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 2px;
+      transition: color 150ms ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .switch-row button:hover { color: var(--text-1); }
+
+    /* Mode transition animation */
+    .form-body { transition: opacity 150ms ease; }
+    .form-body.fading { opacity: 0; }
+
+    @media (max-width: 500px) {
+      .hero { padding: 28px 24px 22px; }
+      .form-body { padding: 22px 24px 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="card">
+    <div class="hero">
+      <div class="hero-icon">📊</div>
+      <h1>Daily Report</h1>
+      <p>Espace de suivi des rapports journaliers et des projets d'équipe.</p>
+    </div>
+
+    <div class="form-body">
+      <div class="form-title" id="formTitle">Connexion</div>
+
+      <div class="field">
+        <label for="username">Nom d'utilisateur</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input id="username" type="text" placeholder="ex: employee1" autocomplete="username" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input id="password" type="password" placeholder="Minimum 4 caractères" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') submitForm()" />
+          <button type="button" class="toggle-pw" id="togglePw" aria-label="Afficher / masquer le mot de passe">
+            <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.94 19.94 0 0 1 4.22-5.32"/>
+              <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a19.86 19.86 0 0 1-3.17 4.19"/>
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="actionBtn" onclick="submitForm()">
+        <span class="btn-label" id="btnLabel">Se connecter</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <div class="msg" id="message"></div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">ou</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="switch-row">
+        <span id="switchText">Pas encore de compte ?</span>
+        <button id="toggleBtn" onclick="toggleMode()">Créer un compte</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let registerMode = false;
+
+    /* --- Password toggle --- */
+    document.getElementById('togglePw').addEventListener('click', () => {
+      const pw = document.getElementById('password');
+      const isHidden = pw.type === 'password';
+      pw.type = isHidden ? 'text' : 'password';
+      document.getElementById('eyeOpen').style.display = isHidden ? 'none' : '';
+      document.getElementById('eyeOff').style.display  = isHidden ? '' : 'none';
+    });
+
+    /* --- Mode toggle --- */
+    function toggleMode() {
+      const fb = document.querySelector('.form-body');
+      fb.classList.add('fading');
+      setTimeout(() => {
+        registerMode = !registerMode;
+        document.getElementById('formTitle').textContent  = registerMode ? 'Créer un compte' : 'Connexion';
+        document.getElementById('btnLabel').textContent   = registerMode ? "S'inscrire" : 'Se connecter';
+        document.getElementById('toggleBtn').textContent  = registerMode ? 'Se connecter' : 'Créer un compte';
+        document.getElementById('switchText').textContent = registerMode ? 'Vous avez déjà un compte ?' : 'Pas encore de compte ?';
+        document.getElementById('message').textContent    = '';
+        document.getElementById('message').className      = 'msg';
+        fb.classList.remove('fading');
+      }, 150);
+    }
+
+    /* --- Submit --- */
+    async function submitForm() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const msgEl    = document.getElementById('message');
+      const btn      = document.getElementById('actionBtn');
+
+      msgEl.textContent = '';
+      msgEl.className   = 'msg';
+
+      if (!username || !password) {
+        showMsg('Veuillez remplir tous les champs.', 'error');
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const url = registerMode ? '/register' : '/login';
+        const res  = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showMsg('Connexion réussie, redirection…', 'success');
+          setTimeout(() => { window.location.replace('/'); }, 600);
+        } else {
+          showMsg(data.error || 'Une erreur est survenue.', 'error');
+          btn.classList.remove('loading');
+          btn.disabled = false;
+        }
+      } catch {
+        showMsg('Impossible de contacter le serveur.', 'error');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className   = `msg ${type}`;
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

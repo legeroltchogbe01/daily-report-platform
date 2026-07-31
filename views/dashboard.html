@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Daily Report Platform</title>
+  <meta name="description" content="Gérez vos projets, rapports et communications d'équipe sur la plateforme Daily Report." />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #080d16;
+      --bg-mid:  #0d1527;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --glass-border: rgba(45, 212, 191, 0.08);
+      --glass-border-hover: rgba(45, 212, 191, 0.2);
+      --primary: #14b8a6;
+      --primary-light: #2dd4bf;
+      --primary-glow: rgba(20, 184, 166, 0.3);
+      --primary-bg: rgba(20, 184, 166, 0.12);
+      --accent:  #a855f7;
+      --accent-bg: rgba(168, 85, 247, 0.15);
+      --success: #10b981;
+      --success-bg: rgba(16,185,129,0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245,158,11,0.12);
+      --danger:  #f43f5e;
+      --danger-bg: rgba(244, 63, 94, 0.12);
+      --text-1:  #f8fafc;
+      --text-2:  #e2e8f0;
+      --text-3:  #94a3b8;
+      --sidebar-w: 260px;
+      --header-h: 64px;
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.6);
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+    }
+
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; color: var(--text-1); color-scheme: dark; }
+    body { background: var(--bg-deep); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+
+    /* ==================== GRID BG ==================== */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 56px 56px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==================== HEADER ==================== */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: rgba(8, 13, 22, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+    }
+
+    .btn-menu {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-1);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      transition: background 150ms ease;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-menu:hover { background: var(--bg-card); }
+    .btn-menu svg { width: 22px; height: 22px; stroke: var(--text-2); }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .brand-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.02em;
+    }
+    .brand-sub { font-size: 0.7rem; color: var(--text-3); font-weight: 400; }
+
+    .header-center { display: flex; align-items: center; gap: 8px; }
+    .header-right  { display: flex; align-items: center; gap: 10px; }
+
+    .who-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+    .who-pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--glass-border-hover);
+      color: var(--text-1);
+    }
+    .who-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .who-role {
+      background: var(--primary-bg);
+      color: var(--primary-light);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Bell */
+    .bell-wrap { position: relative; }
+    .btn-icon {
+      width: 38px; height: 38px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+      position: relative;
+    }
+    .btn-icon:hover { background: var(--bg-card-hover); border-color: var(--glass-border-hover); color: var(--text-1); }
+    .btn-icon svg { width: 18px; height: 18px; }
+    .bell-badge {
+      position: absolute;
+      top: -5px; right: -5px;
+      background: var(--accent);
+      color: white;
+      border-radius: 999px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      min-width: 18px;
+      text-align: center;
+      border: 2px solid var(--bg-deep);
+    }
+
+    /* Bell panel */
+    .bell-panel {
+      position: absolute;
+      right: 0; top: 48px;
+      width: 360px;
+      max-height: 480px;
+      background: linear-gradient(160deg, rgba(15,20,40,0.98), rgba(10,14,28,0.98));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      display: none;
+      animation: fade-down 200ms ease;
+      z-index: 9999;
+    }
+    .bell-panel.open { display: flex; flex-direction: column; }
+    @keyframes fade-down { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+    .bell-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .bell-header h4 { font-size: 0.9rem; font-weight: 700; color: var(--text-1); }
+    .bell-header-actions { display: flex; gap: 6px; }
+    .bell-header-actions button {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      color: var(--text-2);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 150ms ease;
+    }
+    .bell-header-actions button:hover { background: var(--bg-card-hover); color: var(--text-1); }
+    .bell-toolbar {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .bell-toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .bell-toolbar input[type="checkbox"] { accent-color: var(--primary); }
+    .bell-list { overflow-y: auto; flex: 1; padding: 8px; }
+    .bell-empty { text-align: center; padding: 32px 16px; color: var(--text-3); font-size: 0.85rem; }
+
+    .notif-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 150ms ease;
+      align-items: flex-start;
+    }
+    .notif-item:hover { background: rgba(255,255,255,0.05); }
+    .notif-item.unread { background: rgba(99,102,241,0.06); }
+    .notif-icon {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .notif-icon.lvl-success { background: var(--success-bg); }
+    .notif-icon.lvl-info    { background: var(--primary-bg); }
+    .notif-icon.lvl-warning { background: var(--warning-bg); }
+    .notif-icon.lvl-error   { background: var(--danger-bg); }
+    .notif-icon.lvl-project { background: var(--accent-bg); }
+    .notif-text { flex: 1; min-width: 0; }
+    .notif-title { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+    .notif-desc  { font-size: 0.76rem; color: var(--text-2); margin-top: 2px; word-wrap: break-word; }
+    .notif-time  { font-size: 0.68rem; color: var(--text-3); margin-top: 4px; }
+
+    /* Logout btn */
+    .btn-logout {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background 150ms ease, border-color 150ms ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.35); }
+    .btn-logout svg { width: 15px; height: 15px; }
+
+    /* ==================== LAYOUT ==================== */
+    .layout {
+      display: flex;
+      flex: 1;
+      padding-top: var(--header-h);
+      position: relative;
+    }
+
+    /* ==================== SIDEBAR ==================== */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: calc(100vh - var(--header-h));
+      background: rgba(255,255,255,0.02);
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 12px;
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 300ms cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .nav-section { margin-bottom: 8px; }
+    .nav-section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+      padding: 6px 12px 8px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--text-2);
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 150ms ease;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+    }
+    .nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.75; transition: opacity 150ms ease; }
+    .nav-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+    .nav-btn:hover svg { opacity: 1; }
+    .nav-btn.active {
+      background: var(--primary-bg);
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    .nav-btn.active svg { opacity: 1; color: var(--primary-light); }
+    .nav-btn.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 25%; bottom: 25%;
+      width: 3px;
+      background: var(--primary);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ==================== MAIN CONTENT ==================== */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      padding: 28px 28px 48px;
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-1);
+    }
+    .page-subtitle { font-size: 0.82rem; color: var(--text-3); margin-top: 3px; }
+
+    /* ==================== CARDS ==================== */
+    .glass-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .glass-card:hover { transform: translateY(-2px); border-color: var(--glass-border-hover); box-shadow: var(--shadow-md); }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .project-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 200ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-bg), transparent);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .project-card:hover { border-color: rgba(99,102,241,0.35); box-shadow: 0 8px 32px var(--primary-glow); }
+    .project-card:hover::before { opacity: 1; }
+    .project-card:hover .proj-arrow { opacity: 1; transform: translateX(3px); }
+
+    .proj-arrow {
+      position: absolute;
+      top: 20px; right: 20px;
+      color: var(--text-3);
+      opacity: 0;
+      transition: all 200ms ease;
+    }
+    .proj-arrow svg { width: 18px; height: 18px; }
+
+    .proj-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .proj-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: var(--primary-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .proj-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-1);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .proj-manager { font-size: 0.75rem; color: var(--text-3); margin-top: 2px; }
+    .proj-desc {
+      font-size: 0.83rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin-bottom: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .proj-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.73rem;
+      color: var(--text-3);
+    }
+    .meta-chip svg { width: 13px; height: 13px; }
+
+    /* Status chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .chip-assigned  { background: var(--warning-bg); color: var(--warning); }
+    .chip-assigned::before  { background: var(--warning); }
+    .chip-accepted  { background: var(--success-bg); color: var(--success); }
+    .chip-accepted::before  { background: var(--success); }
+    .chip-archived  { background: rgba(148,163,184,0.1); color: var(--text-3); }
+    .chip-archived::before  { background: var(--text-3); }
+    .chip-new { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.1)); color: var(--accent); border: 1px solid rgba(245,158,11,0.3); animation: pulse-chip 2s ease-in-out infinite; }
+    .chip-new::before { background: var(--accent); }
+    @keyframes pulse-chip {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+    }
+
+    /* ==================== EMPTY STATE ==================== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+    .empty-title { font-size: 1.05rem; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+    .empty-desc  { font-size: 0.85rem; color: var(--text-3); max-width: 280px; line-height: 1.6; }
+
+    /* ==================== PROJECT DETAIL ==================== */
+    .detail-header {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .detail-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .detail-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+    .detail-meta  { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+
+    /* Sub-tabs */
+    .sub-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .sub-tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 8px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      color: var(--text-2);
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 150ms ease;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+    }
+    .sub-tab:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
+    .sub-tab.active { background: var(--primary-bg); color: var(--primary-light); }
+
+    /* Cahier */
+    .cahier-block {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      font-family: 'Inter', monospace;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-2);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Messages */
+    .messages-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .messages-list {
+      max-height: 420px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 4px 2px;
+    }
+    .messages-list::-webkit-scrollbar { width: 6px; }
+    .messages-list::-webkit-scrollbar-track { background: transparent; }
+    .messages-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    .msg-bubble {
+      max-width: 75%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 10px 14px;
+      animation: bubble-in 200ms ease;
+    }
+    .msg-bubble.own {
+      align-self: flex-end;
+      background: var(--primary-bg);
+      border-color: rgba(99,102,241,0.3);
+    }
+    @keyframes bubble-in { from { opacity:0; transform: scale(0.95) translateY(6px); } to { opacity:1; transform: scale(1) translateY(0); } }
+    .msg-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .msg-author { font-size: 0.72rem; font-weight: 700; color: var(--text-2); }
+    .msg-author.own { color: var(--primary-light); }
+    .msg-time   { font-size: 0.67rem; color: var(--text-3); }
+    .msg-text   { font-size: 0.88rem; color: var(--text-1); line-height: 1.5; }
+    .msg-img-inline { display: block; max-width: 240px; max-height: 200px; border-radius: 10px; margin-top: 8px; cursor: pointer; border: 1px solid var(--glass-border); }
+    .msg-attach-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: var(--text-2);
+      text-decoration: none;
+      transition: all 150ms ease;
+    }
+    .msg-attach-chip:hover { border-color: var(--primary); color: var(--primary-light); }
+
+    .msg-input-area {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+    .msg-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      font-size: 0.83rem;
+      color: var(--text-2);
+    }
+    .msg-preview .thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .msg-preview .rem { margin-left: auto; background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1.1rem; font-family: 'Inter', sans-serif; }
+    .msg-input-row { display: flex; gap: 8px; align-items: center; }
+    .msg-input-row input[type=text] {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color 150ms ease;
+    }
+    .msg-input-row input:focus { border-color: var(--primary); }
+    .msg-input-row input::placeholder { color: var(--text-3); }
+
+    /* Progress bar */
+    .progress-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .progress-bar   { height: 3px; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 2px; width: 0%; transition: width 200ms ease; }
+
+    /* Files grid */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .file-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 180ms ease;
+    }
+    .file-card:hover { border-color: var(--glass-border-hover); background: rgba(255,255,255,0.07); }
+    .file-preview { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; display: block; cursor: pointer; }
+    .file-icon-box {
+      width: 100%;
+      height: 100px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      font-size: 2.2rem;
+    }
+    .file-name { margin-top: 8px; font-size: 0.73rem; color: var(--text-2); word-break: break-all; line-height: 1.4; }
+    .file-name a { color: var(--primary-light); text-decoration: none; }
+    .file-name a:hover { color: var(--text-1); }
+    .file-meta { font-size: 0.65rem; color: var(--text-3); margin-top: 4px; }
+    .file-delete {
+      position: absolute;
+      top: 6px; right: 6px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 150ms ease;
+    }
+    .file-delete:hover { background: var(--danger); }
+
+    /* Submissions */
+    .submission-group {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .submission-group summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-1);
+      list-style: none;
+      transition: background 150ms ease;
+    }
+    .submission-group summary::-webkit-details-marker { display: none; }
+    .submission-group summary:hover { background: rgba(255,255,255,0.03); }
+    .sub-count {
+      background: var(--primary-bg);
+      color: var(--primary-light);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      font-weight: 700;
+    }
+    .submission-item {
+      background: rgba(255,255,255,0.025);
+      border-top: 1px solid var(--glass-border);
+      padding: 14px 18px;
+    }
+    .sub-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .sub-employee { font-weight: 600; font-size: 0.85rem; color: var(--text-1); }
+    .sub-date     { font-size: 0.75rem; color: var(--text-3); }
+    .sub-text     { font-size: 0.85rem; color: var(--text-2); line-height: 1.6; white-space: pre-wrap; }
+    .sub-attach {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      color: var(--primary-light);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+    .sub-attach:hover { color: var(--text-1); }
+
+    /* ==================== BUTTONS ==================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 150ms ease;
+      white-space: nowrap;
+    }
+    .btn svg { width: 15px; height: 15px; }
+    .btn-primary-sm {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .btn-primary-sm:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-secondary-sm {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      color: var(--text-2);
+    }
+    .btn-secondary-sm:hover { background: var(--bg-card-hover); border-color: var(--glass-border-hover); color: var(--text-1); }
+    .btn-accent-sm {
+      background: var(--accent-bg);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: var(--accent);
+    }
+    .btn-accent-sm:hover { background: rgba(245,158,11,0.2); }
+    .btn-danger-sm {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: var(--danger);
+    }
+    .btn-danger-sm:hover { background: rgba(239,68,68,0.2); }
+    .btn-success-sm {
+      background: var(--success-bg);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: var(--success);
+    }
+    .btn-success-sm:hover { background: rgba(16,185,129,0.2); }
+
+    .attach-btn {
+      width: 38px; height: 38px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 50%;
+      color: var(--text-2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 150ms ease;
+      flex-shrink: 0;
+      font-size: 1.05rem;
+    }
+    .attach-btn:hover { background: var(--primary-bg); border-color: rgba(99,102,241,0.3); color: var(--primary-light); }
+
+    /* ==================== FORMS / INPUTS ==================== */
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-2); /* Increased contrast */
+      margin-bottom: 8px;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      background: #0f172a; /* Solid dark background */
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: #ffffff !important; /* Force white text */
+      outline: none;
+      transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--primary);
+      background: #1e293b; /* Darker grey on focus */
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: #64748b; }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f1f5f9'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+    .form-select option {
+      background-color: #0f172a; /* Explicit background for options to prevent white-on-white text */
+      color: #ffffff;
+    }
+
+
+    /* File input */
+    .file-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="file"]:not(#msgFileInput) {
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text-2);
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+      cursor: pointer;
+    }
+    input[type="file"]:not(#msgFileInput)::-webkit-file-upload-button {
+      background: var(--primary-bg);
+      border: 1px solid rgba(99,102,241,0.3);
+      color: var(--primary-light);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ==================== MODAL ==================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      padding: 20px;
+      animation: fade-in 200ms ease;
+    }
+    @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
+    .modal {
+      background: linear-gradient(135deg, rgba(15,20,40,0.98), rgba(10,14,28,0.98));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      width: min(520px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+      animation: modal-in 250ms cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes modal-in { from { opacity:0; transform: scale(0.92) translateY(16px); } to { opacity:1; transform: scale(1) translateY(0); } }
+    .modal-title { font-size: 1.15rem; font-weight: 800; color: var(--text-1); margin-bottom: 20px; letter-spacing: -0.02em; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .modal-error { font-size: 0.82rem; color: var(--danger); margin-top: 10px; min-height: 18px; }
+    .modal-help  { font-size: 0.75rem; color: var(--text-3); margin-top: -10px; margin-bottom: 12px; line-height: 1.5; }
+
+    /* Assignees list */
+    .assign-list {
+      max-height: 180px;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+    }
+    .assign-list label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-2);
+      transition: background 120ms ease;
+    }
+    .assign-list label:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
+    .assign-list input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+    .assign-controls { display: flex; gap: 6px; margin-bottom: 8px; }
+
+    /* ==================== TOASTS ==================== */
+    .toast-host {
+      position: fixed;
+      right: 20px; bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10000;
+      max-width: 340px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(15,20,40,0.97), rgba(10,14,28,0.97));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      animation: toast-slide 250ms cubic-bezier(0.16,1,0.3,1);
+      pointer-events: auto;
+      min-width: 280px;
+      border-left: 3px solid;
+    }
+    @keyframes toast-slide { from { opacity:0; transform: translateX(24px); } to { opacity:1; transform: translateX(0); } }
+    .toast.lvl-success { border-left-color: var(--success); }
+    .toast.lvl-info    { border-left-color: var(--primary); }
+    .toast.lvl-warning { border-left-color: var(--warning); }
+    .toast.lvl-error   { border-left-color: var(--danger); }
+    .toast.lvl-project { border-left-color: var(--accent); }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { flex: 1; min-width: 0; }
+    .toast-title { font-size: 0.85rem; font-weight: 700; color: var(--text-1); }
+    .toast-desc  { font-size: 0.78rem; color: var(--text-2); margin-top: 3px; }
+    .toast-close { background: transparent; border: none; color: var(--text-3); cursor: pointer; font-size: 1.05rem; padding: 0 2px; flex-shrink: 0; transition: color 120ms ease; }
+    .toast-close:hover { color: var(--text-1); }
+
+    /* ==================== LOADING ==================== */
+    .loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 48px;
+      color: var(--text-3);
+      font-size: 0.9rem;
+    }
+    .loading-ring {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(99,102,241,0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ==================== BACK BTN ==================== */
+    .back-row { margin-bottom: 18px; }
+
+    /* ==================== EMPLOYEE GRID ==================== */
+    .emp-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+    }
+    .emp-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .emp-name { font-size: 0.9rem; font-weight: 700; color: var(--text-1); }
+    .emp-role { font-size: 0.73rem; color: var(--text-3); }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      .btn-menu { display: inline-flex; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.mobile-open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .project-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .main { padding: 16px; }
+      .detail-top { flex-direction: column; }
+      .detail-actions { width: 100%; }
+    }
+
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .muted { color: var(--text-3); font-size: 0.82rem; }
+    .danger-text { color: var(--danger); font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header class="header">
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <button class="btn-menu" id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <a href="/" class="header-brand">
+      <div class="brand-icon">📊</div>
+      <div>
+        <div class="brand-name">Daily Report</div>
+        <div class="brand-sub">Plateforme de gestion</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="header-center"></div>
+
+  <div class="header-right">
+    <div class="who-pill" id="whoPill" style="display:none" onclick="openProfileModal()" title="Profil & Sécurité">
+      <div class="who-avatar" id="whoAvatar">?</div>
+      <span id="whoName">—</span>
+      <span class="who-role" id="whoRole">—</span>
+    </div>
+
+    <div class="bell-wrap">
+      <button class="btn-icon" onclick="toggleBell()" aria-label="Notifications" id="bellBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="bell-badge" id="bellBadge" style="display:none">0</span>
+      </button>
+      <div class="bell-panel" id="bellPanel">
+        <div class="bell-header">
+          <h4>Notifications</h4>
+          <div class="bell-header-actions">
+            <button onclick="markAllRead()">Tout lu</button>
+            <button onclick="clearNotifs()">Vider</button>
+          </div>
+        </div>
+        <div class="bell-toolbar">
+          <label>
+            <input type="checkbox" id="prefNative" onchange="if(this.checked) requestNativePermission()" />
+            Notifications natives
+          </label>
+        </div>
+        <div class="bell-list" id="bellList"><div class="bell-empty">Aucune notification.</div></div>
+      </div>
+    </div>
+
+    <button class="btn-logout" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Déconnexion
+    </button>
+  </div>
+</header>
+
+<!-- ========== LAYOUT ========== -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-section">
+      <div class="nav-section-label">Navigation</div>
+      <button class="nav-btn active" id="navProjects" onclick="enterTab('projects')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="6" height="8" rx="1"/><rect x="10" y="3" width="12" height="5" rx="1"/>
+          <rect x="10" y="12" width="12" height="9" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/>
+        </svg>
+        Projets
+        <span class="nav-badge" id="projBadge" style="display:none">0</span>
+      </button>
+      <button class="nav-btn" id="navEmployees" onclick="enterTab('employees')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Employés
+      </button>
+      <button class="nav-btn" id="navArchive" onclick="enterTab('archive')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/>
+          <line x1="10" y1="12" x2="14" y2="12"/>
+        </svg>
+        Archives
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main" id="mainContent">
+    <div class="loading-box">
+      <div class="loading-ring"></div>
+      Chargement du tableau de bord…
+    </div>
+  </main>
+</div>
+
+<!-- ========== TOAST HOST ========== -->
+<div class="toast-host" id="toastHost"></div>
+<!-- ========== MODAL HOST ========== -->
+<div id="modalHost"></div>
+
+<script>
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const state = {
+  user: null,
+  tab: 'projects',
+  projectId: null,
+  subTab: 'cahier',
+  employees: [],
+  projects: [],
+  archive: [],
+  currentProject: null,
+  messages: [],
+  lastSeen: {},
+  poller: null,
+  // Track which project IDs we've already fired unseen toasts for in this session
+  seenToastsFired: new Set(),
+  selectedMsgFile: null,
+  choosingFile: false
+};
+
+const SEEN_KEY   = 'drp.lastSeen.v2';
+const NOTIF_KEY  = 'drp.notifs.v2';
+const PREFS_KEY  = 'drp.prefs.v1';
+const NOTIF_MAX  = 50;
+const POLL_MS    = 6000;  // 6s polling
+const SOFT_MS    = 10000; // 10s soft polling
+
+const loadSeen  = () => { try { state.lastSeen = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { state.lastSeen = {}; } };
+const saveSeen  = () => localStorage.setItem(SEEN_KEY, JSON.stringify(state.lastSeen));
+const seenFor   = pid => state.lastSeen[pid] || { cahierAt:'', msgCount:0, fileCount:0, subCount:0 };
+
+/* =====================================================================
+   UTILS
+   ===================================================================== */
+const fmtDate = iso => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' });
+};
+const esc = s => (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const statusFor = (p, username) => {
+  const map = p.statusByEmployee || p.status_by_employee || {};
+  return map[username] || ((p.assignedEmployees || p.assigned_employees || []).includes(username) ? 'assigned' : 'unknown');
+};
+const formatSize = b => {
+  if (!b && b !== 0) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' Ko';
+  return (b/1048576).toFixed(2) + ' Mo';
+};
+const pId = () => state.currentProject ? state.currentProject.id : 0;
+
+/* =====================================================================
+   NOTIFICATION SYSTEM
+   ===================================================================== */
+const LEVEL_META = {
+  success: { icon:'✓', label:'Succès',    dur:3200 },
+  info:    { icon:'ℹ', label:'Info',      dur:4500 },
+  warning: { icon:'⚠', label:'Attention', dur:5500 },
+  error:   { icon:'✕', label:'Erreur',    dur:6500 },
+  project: { icon:'📣', label:'Projet',   dur:5000 }
+};
+
+const loadNotifs  = () => { try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]'); } catch { return []; } };
+const saveNotifs  = list => localStorage.setItem(NOTIF_KEY, JSON.stringify(list.slice(0, NOTIF_MAX)));
+const loadPrefs   = () => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch { return {}; } };
+const savePrefs   = p => localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+
+function notify(level, title, desc, opts = {}) {
+  const meta = LEVEL_META[level] || LEVEL_META.info;
+  const entry = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    level, title: title || meta.label, desc: desc || '',
+    projectId: opts.projectId || null, tab: opts.tab || null,
+    ts: new Date().toISOString(), read: false
+  };
+
+  const hist = loadNotifs();
+  hist.unshift(entry);
+  saveNotifs(hist);
+  renderBell();
+
+  // Toast
+  const host = document.getElementById('toastHost');
+  const node = document.createElement('div');
+  node.className = `toast lvl-${level}`;
+  node.innerHTML = `
+    <span class="toast-icon">${meta.icon}</span>
+    <div class="toast-body">
+      ${entry.title ? `<div class="toast-title">${esc(entry.title)}</div>` : ''}
+      ${entry.desc  ? `<div class="toast-desc">${esc(entry.desc)}</div>`  : ''}
+    </div>
+    <button class="toast-close" aria-label="Fermer">×</button>
+  `;
+  node.querySelector('.toast-close').onclick = () => node.remove();
+  host.appendChild(node);
+
+  const dur = opts.duration || meta.dur;
+  setTimeout(() => {
+    node.style.opacity   = '0';
+    node.style.transform = 'translateX(16px)';
+    node.style.transition = 'all 250ms ease';
+  }, dur);
+  setTimeout(() => { if (node.parentNode) node.remove(); }, dur + 350);
+
+  // Native
+  if (opts.projectId && typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+    try { new Notification(entry.title || 'Daily Report', { body: entry.desc || '', tag: 'p-' + entry.projectId }); } catch {}
+  }
+}
+
+function renderBell() {
+  const hist   = loadNotifs();
+  const unread = hist.filter(n => !n.read).length;
+  const badge  = document.getElementById('bellBadge');
+  if (badge) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.style.display = unread > 0 ? '' : 'none';
+  }
+  // Update sidebar badge
+  const pb = document.getElementById('projBadge');
+  if (pb) {
+    const projUnread = hist.filter(n => !n.read && n.level === 'project').length;
+    pb.textContent    = projUnread > 99 ? '99+' : String(projUnread);
+    pb.style.display  = projUnread > 0 ? '' : 'none';
+  }
+
+  const list = document.getElementById('bellList');
+  if (!list) return;
+  if (hist.length === 0) { list.innerHTML = '<div class="bell-empty">Aucune notification.</div>'; return; }
+  list.innerHTML = hist.map(n => {
+    const meta = LEVEL_META[n.level] || LEVEL_META.info;
+    return `
+      <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}" data-pid="${n.projectId || ''}" data-tab="${n.tab || ''}">
+        <div class="notif-icon lvl-${n.level}">${meta.icon}</div>
+        <div class="notif-text">
+          <div class="notif-title">${esc(n.title)}</div>
+          ${n.desc ? `<div class="notif-desc">${esc(n.desc)}</div>` : ''}
+          <div class="notif-time">${fmtDate(n.ts)}</div>
+        </div>
+      </div>`;
+  }).join('');
+  list.querySelectorAll('.notif-item').forEach(el => {
+    el.onclick = () => {
+      const id  = el.getAttribute('data-id');
+      const pid = el.getAttribute('data-pid');
+      const tab = el.getAttribute('data-tab');
+      const h2  = loadNotifs();
+      const it  = h2.find(x => String(x.id) === id);
+      if (it) { it.read = true; saveNotifs(h2); renderBell(); }
+      toggleBell(false);
+      if (pid) openProject(parseInt(pid, 10)).then(() => { if (tab) switchSubTab(tab); });
+    };
+  });
+}
+
+function toggleBell(force) {
+  const panel = document.getElementById('bellPanel');
+  if (!panel) return;
+  const show = force === undefined ? !panel.classList.contains('open') : !!force;
+  panel.classList.toggle('open', show);
+}
+function markAllRead()  { const h = loadNotifs(); h.forEach(n => n.read = true); saveNotifs(h); renderBell(); }
+function clearNotifs()  { saveNotifs([]); renderBell(); }
+
+async function requestNativePermission() {
+  if (typeof Notification === 'undefined') { notify('warning','Indisponible','Ce navigateur ne supporte pas les notifications.'); return; }
+  if (Notification.permission === 'granted') { const p = loadPrefs(); p.native = true; savePrefs(p); notify('success','Notifications actives','Vous serez alerté en arrière-plan.'); return; }
+  if (Notification.permission === 'denied')  { notify('error','Permission refusée','Réautorisez dans les paramètres du navigateur.'); return; }
+  const res = await Notification.requestPermission();
+  const p = loadPrefs(); p.native = (res === 'granted'); savePrefs(p);
+  if (res === 'granted') notify('success','Activées','Vous recevrez des alertes en arrière-plan.');
+  else notify('warning','Non accordées','Activez-les ultérieurement si nécessaire.');
+}
+
+/* =====================================================================
+   MODAL
+   ===================================================================== */
+const openModal  = html => {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+};
+const closeModal = () => { document.getElementById('modalHost').innerHTML = ''; };
+
+function openProfileModal() {
+  openModal(`
+    <div class="modal-title">Mon Profil & Sécurité</div>
+    <div class="modal-help">Utilisateur actif : <strong>${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
+    
+    <div style="border-top: 1px solid var(--glass-border); margin: 16px 0; padding-top: 16px;">
+      <h5 style="color:var(--text-1); margin-bottom: 12px; font-size:0.9rem;">Changer de mot de passe</h5>
+      
+      <div class="field" style="margin-bottom:12px;">
+        <label>Ancien mot de passe</label>
+        <input type="password" id="profile-old-pw" placeholder="Saisir l'ancien mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+      </div>
+      
+      <div class="field" style="margin-bottom:12px;">
+        <label>Nouveau mot de passe</label>
+        <input type="password" id="profile-new-pw" placeholder="Min. 4 caractères" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+      </div>
+      
+      <div class="field" style="margin-bottom:12px;">
+        <label>Confirmer le nouveau mot de passe</label>
+        <input type="password" id="profile-confirm-pw" placeholder="Confirmer le nouveau mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+      </div>
+    </div>
+    
+    <div class="modal-error" id="profile-err"></div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour</button>
+    </div>
+  `);
+}
+
+async function submitChangePassword() {
+  const oldPassword = document.getElementById('profile-old-pw').value;
+  const newPassword = document.getElementById('profile-new-pw').value;
+  const confirmPw  = document.getElementById('profile-confirm-pw').value;
+  const errEl       = document.getElementById('profile-err');
+  
+  if (!oldPassword || !newPassword || !confirmPw) {
+    errEl.textContent = 'Tous les champs sont requis.';
+    return;
+  }
+  if (newPassword !== confirmPw) {
+    errEl.textContent = 'Les nouveaux mots de passe ne correspondent pas.';
+    return;
+  }
+  if (newPassword.length < 4) {
+    errEl.textContent = 'Le nouveau mot de passe doit comporter au moins 4 caractères.';
+    return;
+  }
+  
+  errEl.textContent = '';
+  try {
+    const res = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Erreur lors du changement de mot de passe.';
+      return;
+    }
+    closeModal();
+    notify('success', 'Mot de passe mis à jour', 'Votre mot de passe a été modifié avec succès.');
+  } catch (err) {
+    errEl.textContent = 'Impossible de contacter le serveur.';
+  }
+}
+
+/* =====================================================================
+   AUTH / INIT
+   ===================================================================== */
+async function init() {
+  loadSeen();
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) { window.location.href = '/'; return; }
+    state.user = await res.json();
+  } catch {
+    window.location.href = '/';
+    return;
+  }
+
+  // Update header
+  const name  = state.user.username;
+  const role  = state.user.role;
+  document.getElementById('whoAvatar').textContent  = name.slice(0,2).toUpperCase();
+  document.getElementById('whoName').textContent    = name;
+  document.getElementById('whoRole').textContent    = role === 'boss' ? 'Manager' : 'Employé';
+  document.getElementById('whoPill').style.display  = '';
+
+  // Show employees nav if boss
+  if (role === 'boss') document.getElementById('navEmployees').style.display = '';
+
+  // Prefs
+  const prefs = loadPrefs();
+  const cb = document.getElementById('prefNative');
+  if (cb) cb.checked = !!prefs.native;
+
+  renderBell();
+
+  // Close bell on outside click
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('bellPanel');
+    const btn   = document.getElementById('bellBtn');
+    if (!panel || !panel.classList.contains('open')) return;
+    if (panel.contains(e.target) || btn.contains(e.target)) return;
+    panel.classList.remove('open');
+  });
+
+  // Close sidebar on outside click (mobile)
+  document.addEventListener('click', e => {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.getElementById('menuBtn');
+    if (!sidebar || !sidebar.classList.contains('mobile-open')) return;
+    if (sidebar.contains(e.target) || (menuBtn && menuBtn.contains(e.target))) return;
+    sidebar.classList.remove('mobile-open');
+  });
+
+  await enterTab('projects');
+}
+
+async function logout() {
+  await fetch('/logout', { method:'POST' });
+  window.location.href = '/';
+}
+
+/* =====================================================================
+   SIDEBAR & TABS
+   ===================================================================== */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.toggle('mobile-open');
+}
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('mobile-open');
+}
+
+async function enterTab(name) {
+  closeSidebar();
+  state.tab = name;
+  state.projectId = null;
+  stopPolling();
+
+  // Update sidebar active state
+  ['projects','employees','archive'].forEach(t => {
+    const btn = document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === name);
+  });
+
+  const main = document.getElementById('mainContent');
+  if (name === 'employees') await renderEmployees(main);
+  else if (name === 'archive') await renderArchive(main);
+  else await renderProjects(main);
+
+  startSoftPolling();
+}
+
+/* =====================================================================
+   EMPLOYEES
+   ===================================================================== */
+async function renderEmployees(host) {
+  host.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Équipe</div>
+        <div class="page-subtitle">Liste des employés de la plateforme</div>
+      </div>
+    </div>
+    <div class="loading-box"><div class="loading-ring"></div>Chargement…</div>
+  `;
+  const res = await fetch('/api/users');
+  state.employees = res.ok ? await res.json() : [];
+
+  const grid = state.employees.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">Aucun employé</div><div class="empty-desc">Aucun compte employé enregistré pour le moment.</div></div>`
+    : `<div class="project-grid">${state.employees.map(u => `
+        <div class="emp-card">
+          <div class="emp-avatar">${esc(u.username.slice(0,2).toUpperCase())}</div>
+          <div><div class="emp-name">${esc(u.username)}</div><div class="emp-role">Employé</div></div>
+        </div>`).join('')}</div>`;
+
+  host.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Équipe</div>
+        <div class="page-subtitle">${state.employees.length} membre(s) enregistré(s)</div>
+      </div>
+    </div>
+    ${grid}
+  `;
+}
+
+/* =====================================================================
+   PROJECTS LIST
+   ===================================================================== */
+async function renderProjects(host) {
+  const isBoss = state.user.role === 'boss';
+  host.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Mes projets</div>
+        <div class="page-subtitle" id="projSubtitle">Chargement…</div>
+      </div>
+      ${isBoss ? `<button class="btn btn-primary-sm" onclick="openNewProjectModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau projet
+      </button>` : ''}
+    </div>
+    <div id="projectsList"><div class="loading-box"><div class="loading-ring"></div>Chargement des projets…</div></div>
+  `;
+  await refreshProjects();
+  renderProjectsList();
+}
+
+async function refreshProjects() {
+  try {
+    if (state.user.role === 'boss') {
+      const [a, b] = await Promise.all([
+        fetch('/api/users').then(r => r.ok ? r.json() : []),
+        fetch('/api/projects').then(r => r.ok ? r.json() : [])
+      ]);
+      state.employees = a;
+      state.projects  = b;
+    } else {
+      const r = await fetch('/api/projects');
+      state.projects = r.ok ? await r.json() : [];
+    }
+    // FIX: fire unseen toasts only ONCE per project per session
+    fireUnseenToastsOnce();
+  } catch { /* network error – ignore */ }
+}
+
+/* BUG FIX: Only fire toasts once per project, per session, not on every poll */
+function fireUnseenToastsOnce() {
+  for (const p of state.projects || []) {
+    if (state.seenToastsFired.has(p.id)) continue; // already fired
+    const s = seenFor(p.id);
+    const msgLen   = (p.messages  || []).length;
+    const fileLen  = (p.files     || []).length;
+    const subLen   = (p.submissions || []).length;
+    const cahierAt = p.cahierUpdatedAt || p.cahier_updated_at || '';
+
+    let fired = false;
+    if (s.cahierAt && s.cahierAt !== cahierAt) { notify('project','Cahier mis à jour',`Cahier du projet « ${p.name} » modifié.`,{projectId:p.id,tab:'cahier'}); fired=true; }
+    if (msgLen  > (s.msgCount  || 0)) { notify('project','Nouveau message',`Nouveau(x) message(s) sur « ${p.name} ».`,{projectId:p.id,tab:'messages'}); fired=true; }
+    if (fileLen > (s.fileCount || 0)) { notify('project','Nouveau document',`Nouveau(x) fichier(s) sur « ${p.name} ».`,{projectId:p.id,tab:'files'}); fired=true; }
+    if (subLen  > (s.subCount  || 0)) { notify('project','Nouvelle soumission',`${subLen-(s.subCount||0)} soumission(s) sur « ${p.name} ».`,{projectId:p.id,tab:'rapport'}); fired=true; }
+
+    if (fired || (!s.cahierAt && !s.msgCount && !s.fileCount && !s.subCount)) {
+      // Mark fired so we don't keep repeating
+      state.seenToastsFired.add(p.id);
+    }
+  }
+}
+
+function computeUnseenBadge() {
+  let total = 0;
+  for (const p of state.projects || []) {
+    if (p.archived) continue;
+    const s = seenFor(p.id);
+    total += Math.max(0,
+      ((p.messages  || []).length - (s.msgCount  || 0)) +
+      ((p.files     || []).length - (s.fileCount || 0)) +
+      ((p.submissions || []).length - (s.subCount || 0)) +
+      ((p.cahierUpdatedAt||p.cahier_updated_at) && (p.cahierUpdatedAt||p.cahier_updated_at) !== s.cahierAt ? 1 : 0)
+    );
+  }
+  return total;
+}
+
+function renderProjectsList() {
+  const list = document.getElementById('projectsList');
+  if (!list) return;
+
+  const subtitle = document.getElementById('projSubtitle');
+  if (subtitle) subtitle.textContent = `${state.projects.length} projet(s) actif(s)`;
+
+  // Update sidebar badge
+  const total = computeUnseenBadge();
+  const pb = document.getElementById('projBadge');
+  if (pb) { pb.textContent = total > 99 ? '99+' : String(total); pb.style.display = total > 0 ? '' : 'none'; }
+
+  if (!state.projects || state.projects.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">Aucun projet actif</div>
+      <div class="empty-desc">Aucun projet en cours pour le moment.${state.user.role==='boss' ? ' Créez votre premier projet !' : ''}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = `<div class="project-grid">${state.projects.map(p => {
+    const myStatus  = state.user.role === 'boss' ? null : statusFor(p, state.user.username);
+    const unseen    = isUnseen(p);
+    const assignees = p.assignedEmployees || p.assigned_employees || [];
+    const icons     = ['📁','🚀','💡','🔧','🎯','📐','🖥️','📊','⚙️','🗂️'];
+    const projIcon  = icons[Math.abs(p.id || 0) % icons.length];
+
+    return `
+      <div class="project-card" onclick="openProject(${p.id})">
+        <div class="proj-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="proj-header">
+          <div class="proj-icon">${projIcon}</div>
+          <div>
+            <div class="proj-title">${esc(p.name)}</div>
+            <div class="proj-manager">Manager : ${esc(p.manager || '—')}</div>
+          </div>
+        </div>
+        <div class="proj-desc">${esc(p.description || 'Aucune description.')}</div>
+        <div class="proj-meta">
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            ${assignees.length} assigné(s)
+          </span>
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            ${(p.submissions || []).length} soumission(s)
+          </span>
+          ${unseen    ? `<span class="chip chip-new">Nouveauté</span>` : ''}
+          ${myStatus === 'assigned' ? `<span class="chip chip-assigned">À accepter</span>` : ''}
+          ${myStatus === 'accepted' ? `<span class="chip chip-accepted">Accepté</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+function isUnseen(p) {
+  const s = seenFor(p.id);
+  const ca = p.cahierUpdatedAt || p.cahier_updated_at || '';
+  return (s.cahierAt && s.cahierAt !== ca)
+      || ((p.messages   || []).length > (s.msgCount  || 0))
+      || ((p.files      || []).length > (s.fileCount || 0))
+      || ((p.submissions|| []).length > (s.subCount  || 0));
+}
+
+/* =====================================================================
+   NEW PROJECT MODAL
+   ===================================================================== */
+async function openNewProjectModal() {
+  if (!state.employees.length) {
+    const r = await fetch('/api/users');
+    state.employees = r.ok ? await r.json() : [];
+  }
+  if (!state.employees.length) { notify('warning','Aucun employé','Aucun compte employé enregistré.'); return; }
+  openModal(`
+    <div class="modal-title">✨ Nouveau projet</div>
+    <div class="form-field">
+      <label class="form-label">Nom du projet</label>
+      <input class="form-input" id="np-name" placeholder="ex: Site vitrine Acme Corp" />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Cahier de charge</label>
+      <textarea class="form-textarea" id="np-desc" rows="5" placeholder="Décrivez le périmètre, les livrables, les délais, les critères d'acceptation…"></textarea>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <label class="form-label" style="margin:0">Employés assignés</label>
+      <div class="assign-controls">
+        <button class="btn btn-secondary-sm" style="padding:5px 10px;font-size:0.72rem" onclick="npSelectAll(true)">Tout</button>
+        <button class="btn btn-secondary-sm" style="padding:5px 10px;font-size:0.72rem" onclick="npSelectAll(false)">Aucun</button>
+      </div>
+    </div>
+    <input class="form-input" id="np-search" placeholder="Filtrer par nom…" oninput="npFilter()" style="margin-bottom:8px" />
+    <div class="assign-list" id="np-list">
+      ${state.employees.map(u => `<label data-u="${esc(u.username)}"><input type="checkbox" class="np-assign" value="${esc(u.username)}" onchange="npCount()" /> ${esc(u.username)}</label>`).join('')}
+    </div>
+    <div class="modal-error" id="np-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary-sm" onclick="submitNewProject()">Créer le projet</button>
+    </div>
+  `);
+  npCount();
+}
+function npSelectAll(v) { document.querySelectorAll('.np-assign').forEach(c => { if (c.closest('label').style.display !== 'none') c.checked = v; }); npCount(); }
+function npCount()     { /* just UI */ }
+function npFilter()    { const q = (document.getElementById('np-search').value || '').toLowerCase(); document.querySelectorAll('#np-list label').forEach(l => { l.style.display = (q==='' || (l.getAttribute('data-u')||'').toLowerCase().includes(q)) ? '' : 'none'; }); }
+
+async function submitNewProject() {
+  const name      = document.getElementById('np-name').value.trim();
+  const desc      = document.getElementById('np-desc').value.trim();
+  const assignees = [...document.querySelectorAll('.np-assign:checked')].map(c => c.value);
+  const errEl     = document.getElementById('np-err');
+  if (!name || !desc || !assignees.length) { errEl.textContent = 'Nom, cahier de charge et au moins un assigné sont requis.'; return; }
+  const res  = await fetch('/api/projects', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, description:desc, assignees}) });
+  const data = await res.json();
+  if (!res.ok) { errEl.textContent = data.error || 'Erreur.'; return; }
+  closeModal();
+  await refreshProjects();
+  renderProjectsList();
+  notify('success','Projet créé',`« ${name} » a été créé avec succès.`);
+}
+
+/* =====================================================================
+   ARCHIVE
+   ===================================================================== */
+async function renderArchive(host) {
+  host.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Archives</div><div class="page-subtitle">Projets archivés</div></div>
+    </div>
+    <div class="loading-box"><div class="loading-ring"></div>Chargement…</div>
+  `;
+  const r = await fetch('/api/projects/archive');
+  state.archive = r.ok ? await r.json() : [];
+
+  if (!state.archive.length) {
+    host.innerHTML = `
+      <div class="page-header"><div><div class="page-title">Archives</div><div class="page-subtitle">0 projet archivé</div></div></div>
+      <div class="empty-state"><div class="empty-icon">🗃️</div><div class="empty-title">Aucune archive</div><div class="empty-desc">Les projets archivés apparaîtront ici.</div></div>
+    `;
+    return;
+  }
+
+  host.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Archives</div><div class="page-subtitle">${state.archive.length} projet(s) archivé(s)</div></div>
+    </div>
+    <div class="project-grid">
+      ${state.archive.map(p => {
+        const assignees = p.assignedEmployees || p.assigned_employees || [];
+        return `
+          <div class="project-card" onclick="openProject(${p.id}, true)">
+            <div class="proj-header">
+              <div class="proj-icon" style="background:rgba(148,163,184,0.1)">🗂️</div>
+              <div>
+                <div class="proj-title">${esc(p.name)} <span class="chip chip-archived" style="vertical-align:middle">Archivé</span></div>
+                <div class="proj-manager">Manager : ${esc(p.manager || '—')}</div>
+              </div>
+            </div>
+            <div class="proj-desc">${esc((p.description || '').slice(0, 120))}${(p.description||'').length > 120 ? '…' : ''}</div>
+            <div class="proj-meta"><span class="meta-chip">${assignees.length} assigné(s)</span></div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+/* =====================================================================
+   PROJECT DETAIL
+   ===================================================================== */
+async function openProject(id, fromArchive = false) {
+  closeSidebar();
+  state.projectId = id;
+  state.subTab    = 'cahier';
+  state.selectedMsgFile = null;
+
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-box"><div class="loading-ring"></div>Chargement du projet…</div>`;
+
+  try {
+    const res = await fetch(`/api/projects/${id}`);
+    if (!res.ok) { notify('error','Erreur','Projet introuvable ou accès refusé.'); await enterTab(state.tab); return; }
+    state.currentProject = await res.json();
+    state.messages = (state.currentProject.messages || []).slice();
+    markSeen(state.currentProject);
+    saveSeen();
+    renderProjectDetail();
+    startPolling();
+  } catch {
+    notify('error','Erreur réseau','Impossible de charger le projet.');
+    await enterTab(state.tab);
+  }
+}
+
+function closeProject() {
+  state.projectId = null;
+  state.currentProject = null;
+  state.messages = [];
+  state.selectedMsgFile = null;
+  stopPolling();
+  enterTab(state.tab);
+}
+
+function markSeen(p) {
+  state.lastSeen[p.id] = {
+    cahierAt:  p.cahierUpdatedAt || p.cahier_updated_at || '',
+    msgCount:  (p.messages   || []).length,
+    fileCount: (p.files      || []).length,
+    subCount:  (p.submissions|| []).length
+  };
+  // Mark as seen so we don't fire toasts again
+  state.seenToastsFired.add(p.id);
+}
+
+function renderProjectDetail() {
+  const p       = state.currentProject;
+  if (!p) return;
+  const isBoss    = state.user.role === 'boss';
+  const myStatus  = isBoss ? '' : statusFor(p, state.user.username);
+  const isArchived = !!p.archived;
+  const assignees  = p.assignedEmployees || p.assigned_employees || [];
+  const statusMap  = p.statusByEmployee || p.status_by_employee || {};
+
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="back-row">
+      <button class="btn btn-secondary-sm" onclick="closeProject()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour aux projets
+      </button>
+    </div>
+
+    <div class="detail-header">
+      <div class="detail-top">
+        <div style="flex:1;min-width:0">
+          <div class="detail-title">${esc(p.name)} ${isArchived ? `<span class="chip chip-archived">Archivé</span>` : ''}</div>
+          <div class="muted">Manager : ${esc(p.manager || '—')} &nbsp;•&nbsp; Cahier mis à jour : ${fmtDate(p.cahierUpdatedAt || p.cahier_updated_at)}</div>
+          <div class="detail-meta">
+            ${assignees.map(u => {
+              const s = statusMap[u] || 'assigned';
+              return `<span class="chip ${s==='accepted'?'chip-accepted':'chip-assigned'}">${esc(u)} : ${s==='accepted'?'accepté':'à accepter'}</span>`;
+            }).join(' ')}
+          </div>
+        </div>
+        <div class="detail-actions">
+          ${!isBoss && myStatus === 'assigned' ? `<button class="btn btn-success-sm" onclick="acceptProject(${p.id})">✓ Accepter le projet</button>` : ''}
+          ${!isBoss && !isArchived ? `<button class="btn btn-accent-sm" onclick="openSubmitModal(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Soumettre
+          </button>` : ''}
+          ${isBoss && !isArchived ? `<button class="btn btn-secondary-sm" onclick="openEditCahierModal(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Modifier cahier
+          </button>` : ''}
+          ${isBoss && !isArchived ? `<button class="btn btn-secondary-sm" onclick="openAssigneesModal(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Assignés
+          </button>` : ''}
+          ${isBoss && !isArchived ? `<button class="btn btn-secondary-sm" onclick="doArchiveProject(${p.id})">🗃️ Archiver</button>` : ''}
+          ${isBoss ? `<button class="btn btn-danger-sm" onclick="deleteProject(${p.id}, ${p.archived ? 'true':'false'})">🗑️ Supprimer</button>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-tabs">
+      <button class="sub-tab ${state.subTab==='cahier'   ?'active':''}" onclick="switchSubTab('cahier')">📋 Cahier</button>
+      <button class="sub-tab ${state.subTab==='messages' ?'active':''}" onclick="switchSubTab('messages')">💬 Messages</button>
+      <button class="sub-tab ${state.subTab==='rapport'  ?'active':''}" onclick="switchSubTab('rapport')">📊 Rapport</button>
+      <button class="sub-tab ${state.subTab==='files'    ?'active':''}" onclick="switchSubTab('files')">📁 Fichiers</button>
+    </div>
+
+    <div id="subTabContent"></div>
+  `;
+  renderSubTab();
+}
+
+function switchSubTab(name) { state.subTab = name; renderProjectDetail(); }
+
+function renderSubTab() {
+  const host = document.getElementById('subTabContent');
+  if (!host) return;
+  if      (state.subTab === 'cahier')   renderCahier(host);
+  else if (state.subTab === 'messages') renderMessages(host);
+  else if (state.subTab === 'rapport')  renderRapport(host);
+  else if (state.subTab === 'files')    renderFiles(host);
+}
+
+/* ---- Cahier ---- */
+function renderCahier(host) {
+  const p = state.currentProject;
+  host.innerHTML = `<div class="cahier-block">${esc(p.description || 'Aucun contenu.')}</div>`;
+}
+
+/* ---- Messages ---- */
+function renderMessages(host) {
+  const pid = pId();
+  host.innerHTML = `
+    <div class="messages-container">
+      <div class="messages-list" id="messagesList">
+        ${state.messages.map(m => msgBubbleHtml(m)).join('')}
+        ${state.messages.length === 0 ? '<div class="empty-state" style="padding:30px"><div class="empty-icon">💬</div><div class="empty-title">Aucun message</div><div class="empty-desc">Commencez la conversation !</div></div>' : ''}
+      </div>
+      <div class="msg-input-area">
+        <div id="msgPreview"></div>
+        <div class="msg-input-row">
+          <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
+            <div class="attach-btn" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; margin: 0;">📎</div>
+            <input type="file" id="msgFileInput" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.pdf,.doc,.docx,.txt,.csv,.json,.zip" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; padding: 0; border: none; background: transparent;" onchange="onMsgFileChange()" onclick="state.choosingFile = true" />
+          </div>
+          <input type="text" id="msgInput" placeholder="Votre message… (Entrée pour envoyer)" autocomplete="off"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postMessage(${pid})}" />
+          <button type="button" class="btn btn-primary-sm" id="msgSendBtn" onclick="postMessage(${pid})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Envoyer
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  renderMsgPreview();
+  scrollMsgs();
+  const inp = document.getElementById('msgInput');
+  if (inp) inp.focus();
+}
+
+function msgBubbleHtml(m) {
+  const own   = m.author === state.user.username;
+  const att   = m.attachment || null;
+  const isImg = att && (att.mimeType || '').startsWith('image/');
+  return `
+    <div class="msg-bubble ${own ? 'own' : ''}">
+      <div class="msg-meta">
+        <span class="msg-author ${own ? 'own' : ''}">${esc(m.author)}</span>
+        <span class="msg-time">${fmtDate(m.createdAt || m.created_at)}</span>
+      </div>
+      ${m.text ? `<div class="msg-text">${esc(m.text)}</div>` : ''}
+      ${att ? (isImg
+        ? `<a href="${att.url}" target="_blank" rel="noopener"><img class="msg-img-inline" src="${att.url}" alt="${esc(att.originalName||att.filename||'image')}" /></a>`
+        : `<a class="msg-attach-chip" href="${att.url}" target="_blank" rel="noopener">📎 ${esc(att.originalName||att.filename||'fichier')} <span class="muted">(${formatSize(att.size)})</span></a>`) : ''}
+    </div>
+  `;
+}
+
+function onMsgFileChange() {
+  const input = document.getElementById('msgFileInput');
+  if (!input || !input.files || !input.files.length) {
+    state.selectedMsgFile = null;
+    renderMsgPreview();
+    return;
+  }
+  state.selectedMsgFile = input.files[0];
+  renderMsgPreview();
+}
+
+function renderMsgPreview() {
+  const preview = document.getElementById('msgPreview');
+  if (!preview) return;
+  const f = state.selectedMsgFile;
+  if (!f) {
+    preview.innerHTML = '';
+    return;
+  }
+  const isImage = (f.type || '').startsWith('image/');
+  const blobUrl = isImage ? URL.createObjectURL(f) : '';
+  preview.innerHTML = `
+    <div class="msg-preview">
+      <div class="thumb">${isImage ? `<img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block" />` : '📄'}</div>
+      <div style="flex:1;overflow:hidden;min-width:0">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.83rem">${esc(f.name)}</div>
+        <div class="muted">${formatSize(f.size)}</div>
+      </div>
+      <button type="button" class="rem" onclick="clearMsgFile()">×</button>
+    </div>
+  `;
+}
+
+function clearMsgFile() {
+  state.selectedMsgFile = null;
+  const inp = document.getElementById('msgFileInput');
+  if (inp) inp.value = '';
+  const pv = document.getElementById('msgPreview');
+  if (pv) pv.innerHTML = '';
+}
+
+async function postMessage(id) {
+  const input = document.getElementById('msgInput');
+  if (!input) return;
+  const text     = input.value.trim();
+  const file      = state.selectedMsgFile;
+  if (!text && !file) { input.focus(); return; }
+
+  const btn = document.getElementById('msgSendBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const url = file ? `/api/projects/${id}/messages/attachment` : `/api/projects/${id}/messages`;
+    let res;
+    if (file) {
+      const fd = new FormData(); fd.append('text', text); fd.append('attachment', file);
+      res = await fetch(url, { method:'POST', body: fd });
+    } else {
+      res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text}) });
+    }
+    if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Échec',''+( d.error || `HTTP ${res.status}`)); return; }
+    const m = await res.json();
+    state.messages.push(m);
+    markSeen(state.currentProject);
+    saveSeen();
+    input.value = '';
+    clearMsgFile();
+    const list = document.getElementById('messagesList');
+    if (list) {
+      // Remove empty state if present
+      const emptyState = list.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+      list.insertAdjacentHTML('beforeend', msgBubbleHtml(m));
+      scrollMsgs();
+    }
+    input.focus();
+  } catch { notify('error','Erreur réseau','La connexion a échoué.'); }
+  finally { if (btn) btn.disabled = false; }
+}
+function scrollMsgs() { const l = document.getElementById('messagesList'); if (l) l.scrollTop = l.scrollHeight; }
+
+/* ---- Rapport ---- */
+function renderRapport(host) {
+  const p    = state.currentProject;
+  const subs = p.submissions || [];
+  const groups = { devis:'Devis', cahier:'Cahier de charges', rapport:'Rapports' };
+  let html = '';
+  for (const k of Object.keys(groups)) {
+    const items = subs.filter(s => (s.type || '').toLowerCase() === k);
+    html += `
+      <details class="submission-group" ${items.length ? 'open' : ''}>
+        <summary>
+          <span>📄 ${groups[k]}</span>
+          <span class="sub-count">${items.length}</span>
+        </summary>
+        ${items.length === 0
+          ? `<div class="submission-item"><p class="muted">Aucune soumission.</p></div>`
+          : items.map(s => `
+            <div class="submission-item">
+              <div class="sub-item-header">
+                <span class="sub-employee">${esc(s.employee)}</span>
+                <span class="sub-date">${fmtDate(s.createdAt || s.created_at)}</span>
+              </div>
+              ${s.text ? `<div class="sub-text">${esc(s.text)}</div>` : ''}
+              ${s.attachment && s.attachment.url
+                ? `<a class="sub-attach" href="${s.attachment.url}" target="_blank" rel="noopener">📎 ${esc(s.attachment.originalName || s.attachment.filename || 'fichier')}</a>`
+                : ''}
+            </div>`).join('')}
+      </details>`;
+  }
+  if (!p.archived && state.user.role === 'employee' && (p.assignedEmployees || p.assigned_employees || []).includes(state.user.username)) {
+    html += `<button class="btn btn-accent-sm" onclick="openSubmitModal(${pId()})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Soumettre un document
+    </button>`;
+  }
+  host.innerHTML = html;
+}
+
+/* ---- Files ---- */
+function renderFiles(host) {
+  const p = state.currentProject;
+  let html = `<div id="filesGridHost">${buildFileGridHtml(p)}</div>`;
+  if (!p.archived) {
+    html += `
+      <div style="margin-top:18px">
+        <input type="file" id="filesInput" multiple accept="${ALLOWED_ACCEPT}" style="margin-bottom:8px" onclick="state.choosingFile = true" />
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+          <button class="btn btn-primary-sm" id="filesUploadBtn" onclick="uploadFiles(${pId()})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Téléverser
+          </button>
+          <span class="muted">Formats : images, PDF, Word, Excel, texte, archives — max 25 Mo / fichier</span>
+        </div>
+        <div class="progress-track" style="display:none" id="filesProgressTrack"><div class="progress-bar" id="filesProgressBar"></div></div>
+        <div class="danger-text" id="filesMsg"></div>
+      </div>`;
+  }
+  host.innerHTML = html;
+}
+
+const ALLOWED_ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg,.gif,.webp,.zip,.rar,.mp3,.mp4";
+
+function buildFileGridHtml(p) {
+  const files = p.files || [];
+  if (!files.length) return `<div class="empty-state" style="padding:32px"><div class="empty-icon">📁</div><div class="empty-title">Aucun fichier</div><div class="empty-desc">Partagez des documents avec l'équipe.</div></div>`;
+  return `<div class="file-grid">${files.map(f => {
+    const isImg   = (f.mimeType || '').startsWith('image/');
+    const isVideo = (f.mimeType || '').startsWith('video/');
+    const isAudio = (f.mimeType || '').startsWith('audio/');
+    const isPdf   = (f.mimeType || '').includes('pdf');
+    const isTxt   = (f.mimeType || '').startsWith('text/') || (f.mimeType || '').includes('json');
+    const label   = esc(f.originalName || f.filename);
+    const preview = isImg
+      ? `<img class="file-preview" src="${f.url}" alt="${label}" loading="lazy" onclick="window.open('${f.url}','_blank')" />`
+      : `<div class="file-icon-box">${isVideo ? '🎬' : isAudio ? '🎵' : isPdf ? '📕' : isTxt ? '📝' : '📄'}</div>`;
+    return `
+      <div class="file-card">
+        ${state.user.role === 'boss' ? `<button class="file-delete" onclick="deleteFile('${f.filename}')" title="Supprimer">×</button>` : ''}
+        ${preview}
+        <div class="file-name"><a href="${f.url}" target="_blank" rel="noopener" title="${label}">${label}</a></div>
+        <div class="file-meta">${esc(f.uploadedBy||'')} • ${formatSize(f.size)}</div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+async function uploadFiles(id) {
+  const fileInput = document.getElementById('filesInput');
+  if (!fileInput || !fileInput.files || !fileInput.files.length) { notify('warning','Aucun fichier','Sélectionnez au moins un fichier.'); return; }
+  const btn  = document.getElementById('filesUploadBtn');
+  const track = document.getElementById('filesProgressTrack');
+  const bar   = document.getElementById('filesProgressBar');
+  const msgEl = document.getElementById('filesMsg');
+  if (btn)  btn.disabled = true;
+  if (msgEl) msgEl.textContent = '';
+  if (track) { track.style.display = ''; bar.style.width = '0%'; }
+  try {
+    const fd = new FormData();
+    for (const f of fileInput.files) fd.append('files', f);
+    const res = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/projects/${id}/files`);
+      xhr.onload = () => { const b = (() => { try { return JSON.parse(xhr.responseText); } catch { return {}; } })(); resolve({ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, body: b}); };
+      xhr.onerror = () => reject(new Error('network'));
+      xhr.upload.onprogress = e => { if (e.lengthComputable && bar) bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; };
+      xhr.send(fd);
+    });
+    if (!res.ok) { if (msgEl) msgEl.textContent = res.body.error || `Erreur HTTP ${res.status}.`; return; }
+    state.currentProject.files = res.body.files;
+    markSeen(state.currentProject); saveSeen();
+    fileInput.value = '';
+    const gridHost = document.getElementById('filesGridHost');
+    if (gridHost) gridHost.innerHTML = buildFileGridHtml(state.currentProject);
+    notify('success','Téléversement terminé',`${(res.body.files || []).length} fichier(s) enregistré(s).`);
+  } catch { if (msgEl) msgEl.textContent = 'Erreur réseau.'; }
+  finally {
+    if (btn) btn.disabled = false;
+    setTimeout(() => { if (track) track.style.display = 'none'; }, 800);
+  }
+}
+
+async function deleteFile(filename) {
+  if (!confirm('Supprimer ce fichier définitivement ?')) return;
+  const res = await fetch(`/api/projects/${pId()}/files/${encodeURIComponent(filename)}`, { method:'DELETE' });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Erreur',d.error || `HTTP ${res.status}`); return; }
+  const data = await res.json();
+  state.currentProject.files = data.files;
+  const gridHost = document.getElementById('filesGridHost');
+  if (gridHost) gridHost.innerHTML = buildFileGridHtml(state.currentProject);
+  notify('success','Fichier supprimé','Le fichier a bien été supprimé.');
+}
+
+/* =====================================================================
+   ACTION HANDLERS
+   ===================================================================== */
+async function acceptProject(id) {
+  const res = await fetch(`/api/projects/${id}/accept`, { method:'POST' });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Erreur',d.error || `HTTP ${res.status}`); return; }
+  state.currentProject = await res.json();
+  notify('success','Projet accepté','Vous pouvez soumettre votre travail.', { projectId:id, tab:'rapport' });
+  renderProjectDetail();
+}
+
+async function doArchiveProject(id) {
+  if (!confirm('Archiver ce projet ?')) return;
+  const res = await fetch(`/api/projects/${id}/archive`, { method:'POST' });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Erreur',d.error || `HTTP ${res.status}`); return; }
+  notify('info','Projet archivé','Le projet a été déplacé dans les archives.');
+  closeProject();
+}
+
+async function deleteProject(id, archived) {
+  const label = String(archived) === 'true' ? 'supprimer définitivement cet archivage' : 'supprimer définitivement ce projet et ses fichiers';
+  if (!confirm(`Êtes-vous sûr de vouloir ${label} ?`)) return;
+  const res = await fetch(`/api/projects/${id}`, { method:'DELETE' });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Erreur',d.error || `HTTP ${res.status}`); return; }
+  notify('warning','Projet supprimé','Le projet a été supprimé.');
+  closeProject();
+}
+
+/* Edit cahier */
+function openEditCahierModal(id) {
+  const p = state.currentProject;
+  openModal(`
+    <div class="modal-title">✏️ Modifier le cahier de charge</div>
+    <div class="form-field">
+      <label class="form-label">Contenu</label>
+      <textarea class="form-textarea" id="editCahier" rows="10">${esc(p.description || '')}</textarea>
+    </div>
+    <div class="modal-error" id="editCahierErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary-sm" onclick="saveCahier(${id})">Enregistrer</button>
+    </div>
+  `);
+}
+async function saveCahier(id) {
+  const desc = document.getElementById('editCahier').value.trim();
+  const errEl = document.getElementById('editCahierErr');
+  if (!desc) { errEl.textContent = 'Le cahier ne peut pas être vide.'; return; }
+  const res = await fetch(`/api/projects/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name:state.currentProject.name, description:desc }) });
+  if (!res.ok) { errEl.textContent = (await res.json()).error || 'Erreur.'; return; }
+  state.currentProject = await res.json();
+  closeModal();
+  renderProjectDetail();
+  notify('success','Cahier mis à jour','Les assignés seront notifiés.', { projectId:id, tab:'cahier' });
+}
+
+/* Assignees modal */
+async function openAssigneesModal(id) {
+  if (!state.employees.length) { const r = await fetch('/api/users'); state.employees = r.ok ? await r.json() : []; }
+  if (!state.employees.length) { notify('warning','Aucun employé','Aucun compte employé disponible.'); return; }
+  const p       = state.currentProject;
+  const current = p.assignedEmployees || p.assigned_employees || [];
+  openModal(`
+    <div class="modal-title">👥 Gérer les assignés</div>
+    <p class="modal-help">Les soumissions des employés retirés seront supprimées.</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <label class="form-label" style="margin:0">Sélection</label>
+      <div class="assign-controls">
+        <button class="btn btn-secondary-sm" style="padding:5px 10px;font-size:0.72rem" onclick="asgAll(true)">Tout</button>
+        <button class="btn btn-secondary-sm" style="padding:5px 10px;font-size:0.72rem" onclick="asgAll(false)">Aucun</button>
+      </div>
+    </div>
+    <input class="form-input" id="asg-search" placeholder="Filtrer…" oninput="asgFilter()" style="margin-bottom:8px" />
+    <div class="assign-list" id="asg-list">
+      ${state.employees.map(u => `<label data-u="${esc(u.username)}"><input type="checkbox" class="asg-cb" value="${esc(u.username)}" ${current.includes(u.username)?'checked':''} /> ${esc(u.username)}</label>`).join('')}
+    </div>
+    <div class="modal-error" id="asg-err"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary-sm" onclick="submitAssignees(${id})">Enregistrer</button>
+    </div>
+  `);
+}
+function asgAll(v)   { document.querySelectorAll('.asg-cb').forEach(c => { if (c.closest('label').style.display !== 'none') c.checked = v; }); }
+function asgFilter() { const q = (document.getElementById('asg-search').value || '').toLowerCase(); document.querySelectorAll('#asg-list label').forEach(l => { l.style.display = (q==='' || (l.getAttribute('data-u')||'').toLowerCase().includes(q)) ? '' : 'none'; }); }
+
+async function submitAssignees(id) {
+  const assignees = [...document.querySelectorAll('.asg-cb:checked')].map(c => c.value);
+  const errEl = document.getElementById('asg-err');
+  if (!assignees.length) { errEl.textContent = 'Au moins un assigné est requis.'; return; }
+  const res = await fetch(`/api/projects/${id}/assignees`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ assignees }) });
+  const data = await res.json();
+  if (!res.ok) { errEl.textContent = data.error || 'Erreur.'; return; }
+  state.currentProject = { ...state.currentProject, ...data };
+  closeModal();
+  renderProjectDetail();
+  if (data._meta) {
+    const added   = (data._meta.added || []).join(', ');
+    const removed = (data._meta.removed || []).join(', ');
+    if (added)   notify('success','Assignés','Ajouté(s) : ' + added);
+    if (removed) notify('warning','Assignés','Retiré(s) : ' + removed);
+    if (!added && !removed) notify('info','Aucun changement','La liste est inchangée.');
+  }
+}
+
+/* Submit modal */
+function openSubmitModal(id) {
+  openModal(`
+    <div class="modal-title">📤 Soumettre un document</div>
+    <div class="form-field">
+      <label class="form-label">Type de soumission</label>
+      <select class="form-select" id="subType">
+        <option value="devis">Devis</option>
+        <option value="cahier">Cahier de charges</option>
+        <option value="rapport">Rapport</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="subText" rows="4" placeholder="Détails de la soumission…"></textarea>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Pièce jointe (optionnelle)</label>
+      <input type="file" id="subFile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.svg" onclick="state.choosingFile = true" />
+    </div>
+    <div class="modal-error" id="subErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary-sm" onclick="submitSubmission(${id})">Envoyer</button>
+    </div>
+  `);
+}
+async function submitSubmission(id) {
+  const type = document.getElementById('subType').value;
+  const text = document.getElementById('subText').value.trim();
+  const fileInput = document.getElementById('subFile');
+  const fd = new FormData();
+  fd.append('type', type);
+  fd.append('text', text);
+  if (fileInput.files.length > 0) fd.append('attachment', fileInput.files[0]);
+  const res = await fetch(`/api/projects/${id}/submit`, { method:'POST', body: fd });
+  const data = await res.json();
+  if (!res.ok) { document.getElementById('subErr').textContent = data.error || 'Erreur.'; return; }
+  state.currentProject.submissions = (state.currentProject.submissions || []).concat([data]);
+  markSeen(state.currentProject); saveSeen();
+  closeModal();
+  renderProjectDetail();
+  notify('success','Soumission envoyée','Votre travail a été transmis au manager.');
+}
+
+/* =====================================================================
+   POLLING  — BUG FIX: don't fire unseen toasts on every poll
+   ===================================================================== */
+function startPolling() {
+  stopPolling();
+  state.poller = setInterval(refreshProject, POLL_MS);
+  refreshProject();
+}
+function startSoftPolling() {
+  stopPolling();
+  state.poller = setInterval(softPoll, SOFT_MS);
+}
+function stopPolling() {
+  if (state.poller) { clearInterval(state.poller); state.poller = null; }
+}
+
+async function softPoll() {
+  // Just refresh the project list data; DO NOT fire more unseen toasts
+  try {
+    if (state.user.role === 'boss') {
+      const [a, b] = await Promise.all([
+        fetch('/api/users').then(r => r.ok ? r.json() : state.employees),
+        fetch('/api/projects').then(r => r.ok ? r.json() : state.projects)
+      ]);
+      state.employees = a;
+      state.projects  = b;
+    } else {
+      const r = await fetch('/api/projects');
+      if (r.ok) state.projects = await r.json();
+    }
+    renderProjectsList();
+  } catch { /* ignore */ }
+}
+
+async function refreshProject() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id;
+  try {
+    const [pRes, mRes] = await Promise.all([
+      fetch(`/api/projects/${id}`),
+      fetch(`/api/projects/${id}/messages`)
+    ]);
+    if (!pRes.ok) return;
+    const prev = state.currentProject;
+    const p    = await pRes.json();
+    const msgs = mRes.ok ? await mRes.json() : (p.messages || []);
+
+    // Notifications for changes since last render (within this detail view)
+    const prevCahier = prev.cahierUpdatedAt || prev.cahier_updated_at;
+    const nextCahier = p.cahierUpdatedAt   || p.cahier_updated_at;
+    if (prevCahier !== nextCahier) notify('project','Cahier mis à jour','Le cahier a été modifié.', {projectId:id, tab:'cahier'});
+    if ((p.submissions || []).length > (prev.submissions || []).length) notify('project','Nouvelle soumission',`${(p.submissions||[]).length - (prev.submissions||[]).length} soumission(s) reçue(s).`,{projectId:id,tab:'rapport'});
+    if ((p.files      || []).length > (prev.files      || []).length) notify('project','Nouveau document',`${(p.files||[]).length - (prev.files||[]).length} fichier(s) ajouté(s).`,{projectId:id,tab:'files'});
+    if (msgs.length > state.messages.length) notify('project','Nouveau message',`${msgs.length - state.messages.length} message(s) reçu(s).`,{projectId:id,tab:'messages'});
+
+    state.currentProject = p;
+    state.messages = msgs;
+    markSeen(p); saveSeen();
+
+    if (state.subTab === 'files') {
+      const host = document.getElementById('filesGridHost');
+      if (host) host.innerHTML = buildFileGridHtml(p);
+    } else if (state.subTab === 'messages') {
+      const list = document.getElementById('messagesList');
+      if (list && msgs.length !== list.querySelectorAll('.msg-bubble').length) {
+        list.innerHTML = msgs.map(m => msgBubbleHtml(m)).join('');
+        scrollMsgs();
+      }
+    } else if (state.subTab === 'rapport') {
+      const host = document.getElementById('subTabContent');
+      if (host && !state.choosingFile) renderRapport(host);
+    } else if (state.subTab === 'cahier') {
+      const descEl = document.getElementById('projectDescText');
+      if (descEl) descEl.textContent = p.description || '';
+    }
+  } catch { /* ignore transient */ }
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+window.addEventListener('focus', () => { state.choosingFile = false; });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
+  });
+}
+init();
+</script>
+</body>
+</html>
