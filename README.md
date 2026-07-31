@@ -36,6 +36,13 @@ Cliquez sur votre **badge de profil** (nom + initiales) en haut à droite du tab
 2. Définissez et confirmez le nouveau (minimum 4 caractères).
 3. Cliquez sur **Mettre à jour le mot de passe**.
 
+#### ⚠️ Supprimer mon compte
+1. Tout en bas du modal dans la **Zone de danger**, saisissez votre mot de passe actuel.
+2. Cliquez sur **Supprimer mon compte** et confirmez l'alerte.
+3. Votre compte et vos données personnelles seront définitivement supprimés, et vous serez réorienté vers la page de connexion.
+
+> **Note :** Le compte administrateur principal (`boss`) ne peut pas être supprimé.
+
 ---
 
 ### 💻 Pour les Managers (Rôle Boss)
