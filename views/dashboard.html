@@ -1542,33 +1542,45 @@ const closeModal = () => { document.getElementById('modalHost').innerHTML = ''; 
 
 function openProfileModal() {
   openModal(`
-    <div class="modal-title">Mon Profil & Sécurité</div>
-    <div class="modal-help">Utilisateur actif : <strong>${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
+    <div class="modal-title">Mon Profil &amp; Sécurité</div>
+    <div class="modal-help">Utilisateur actif : <strong id="profile-current-name">${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
     
-    <div style="border-top: 1px solid var(--glass-border); margin: 16px 0; padding-top: 16px;">
+    <!-- Section : Changer le nom d'utilisateur -->
+    <div style="border-top: 1px solid var(--glass-border); margin: 16px 0 0; padding-top: 16px;">
+      <h5 style="color:var(--text-1); margin-bottom: 12px; font-size:0.9rem;">Changer de nom d'utilisateur</h5>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Nouveau nom d'utilisateur</label>
+        <input type="text" id="profile-new-username" placeholder="Nouveau nom (min 2 caractères)" value="${esc(state.user.username)}" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
+      </div>
+      <div class="modal-error" id="profile-username-err"></div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-primary-sm" onclick="submitChangeUsername()">Mettre à jour le nom</button>
+      </div>
+    </div>
+
+    <!-- Section : Changer le mot de passe -->
+    <div style="border-top: 1px solid var(--glass-border); margin: 16px 0 0; padding-top: 16px;">
       <h5 style="color:var(--text-1); margin-bottom: 12px; font-size:0.9rem;">Changer de mot de passe</h5>
       
       <div class="field" style="margin-bottom:12px;">
         <label>Ancien mot de passe</label>
-        <input type="password" id="profile-old-pw" placeholder="Saisir l'ancien mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+        <input type="password" id="profile-old-pw" placeholder="Saisir l'ancien mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
       </div>
       
       <div class="field" style="margin-bottom:12px;">
         <label>Nouveau mot de passe</label>
-        <input type="password" id="profile-new-pw" placeholder="Min. 4 caractères" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+        <input type="password" id="profile-new-pw" placeholder="Min. 4 caractères" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
       </div>
       
       <div class="field" style="margin-bottom:12px;">
         <label>Confirmer le nouveau mot de passe</label>
-        <input type="password" id="profile-confirm-pw" placeholder="Confirmer le nouveau mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif;" />
+        <input type="password" id="profile-confirm-pw" placeholder="Confirmer le nouveau mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
       </div>
-    </div>
-    
-    <div class="modal-error" id="profile-err"></div>
-    
-    <div class="modal-actions">
-      <button class="btn btn-secondary-sm" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour</button>
+      <div class="modal-error" id="profile-err"></div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn btn-secondary-sm" onclick="closeModal()">Fermer</button>
+        <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour le mot de passe</button>
+      </div>
     </div>
   `);
 }
@@ -1606,6 +1618,51 @@ async function submitChangePassword() {
     }
     closeModal();
     notify('success', 'Mot de passe mis à jour', 'Votre mot de passe a été modifié avec succès.');
+  } catch (err) {
+    errEl.textContent = 'Impossible de contacter le serveur.';
+  }
+}
+
+async function submitChangeUsername() {
+  const newUsernameInput = document.getElementById('profile-new-username');
+  const errEl = document.getElementById('profile-username-err');
+  if (!newUsernameInput || !errEl) return;
+  const newUsername = newUsernameInput.value.trim();
+  errEl.textContent = '';
+
+  if (newUsername.length < 2) {
+    errEl.textContent = 'Le nom doit comporter au moins 2 caractères.';
+    return;
+  }
+  if (newUsername === state.user.username) {
+    errEl.textContent = 'C\'est déjà votre nom d\'utilisateur.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/change-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newUsername })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Erreur lors du changement de nom.';
+      return;
+    }
+    // Update local state and UI
+    state.user.username = data.username;
+    const initials = data.username.slice(0,2).toUpperCase();
+    document.getElementById('whoAvatar').textContent = initials;
+    document.getElementById('whoName').textContent   = data.username;
+    const mobAvatar = document.getElementById('mobAvatar');
+    const mobName   = document.getElementById('mobName');
+    if (mobAvatar) mobAvatar.textContent = initials;
+    if (mobName)   mobName.textContent   = data.username;
+    const curName = document.getElementById('profile-current-name');
+    if (curName) curName.textContent = data.username;
+    errEl.style.color = 'var(--success)';
+    errEl.textContent = '✓ Nom mis à jour avec succès !';
   } catch (err) {
     errEl.textContent = 'Impossible de contacter le serveur.';
   }

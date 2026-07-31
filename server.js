@@ -797,6 +797,108 @@ app.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
+app.post('/api/change-username', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'Non connecté' });
+  const { newUsername } = req.body;
+  if (!newUsername || typeof newUsername !== 'string' || newUsername.trim().length < 2) {
+    return res.status(400).json({ error: 'Nom d\'utilisateur invalide (min 2 caractères).' });
+  }
+  const oldUsername = req.session.user.username;
+  const target = newUsername.trim();
+  if (target === oldUsername) return res.json({ success: true, username: target });
+
+  // 1. Check if username exists
+  if (useDb) {
+    const exist = await queryDb('SELECT 1 FROM users WHERE username = $1', [target]);
+    if (exist.rows.length > 0) return res.status(400).json({ error: 'Ce nom d\'utilisateur est déjà pris.' });
+  } else {
+    if (users.some(u => u.username.toLowerCase() === target.toLowerCase())) {
+      return res.status(400).json({ error: 'Ce nom d\'utilisateur est déjà pris.' });
+    }
+  }
+
+  // 2. Perform massive update
+  if (useDb) {
+    await queryDb('UPDATE users SET username = $1 WHERE username = $2', [target, oldUsername]);
+    await queryDb('UPDATE reports SET employee = $1 WHERE employee = $2', [target, oldUsername]);
+    await queryDb('UPDATE comments SET author = $1 WHERE author = $2', [target, oldUsername]);
+    
+    const allProj = await queryDb('SELECT * FROM projects');
+    for (let p of allProj.rows) {
+       let changed = false;
+       if (p.manager === oldUsername) { p.manager = target; changed = true; }
+       
+       let assigned = p.assigned_employees || [];
+       if (assigned.includes(oldUsername)) {
+         assigned = assigned.map(a => a === oldUsername ? target : a);
+         p.assigned_employees = assigned;
+         changed = true;
+       }
+       
+       let msgs = p.messages || [];
+       msgs.forEach(m => { 
+         if (m.author === oldUsername) { m.author = target; changed = true; } 
+         if (m.replyTo && m.replyTo.author === oldUsername) { m.replyTo.author = target; changed = true; }
+       });
+       if (msgs.length > 0) p.messages = msgs;
+
+       let subs = p.submissions || [];
+       subs.forEach(s => {
+         if (s.author === oldUsername) { s.author = target; changed = true; }
+       });
+       if (subs.length > 0) p.submissions = subs;
+
+       let statuses = p.status_by_employee || {};
+       if (statuses[oldUsername]) {
+         statuses[target] = statuses[oldUsername];
+         delete statuses[oldUsername];
+         p.status_by_employee = statuses;
+         changed = true;
+       }
+
+       if (changed) {
+         await queryDb(
+           'UPDATE projects SET manager = $1, assigned_employees = $2, messages = $3, submissions = $4, status_by_employee = $5 WHERE id = $6',
+           [p.manager, JSON.stringify(p.assigned_employees), JSON.stringify(p.messages), JSON.stringify(p.submissions), JSON.stringify(p.status_by_employee), p.id]
+         );
+       }
+    }
+  } else {
+    const u = users.find(u => u.username === oldUsername);
+    if (u) { u.username = target; saveJson(USERS_FILE, users); }
+    
+    reports.forEach(r => { if (r.employee === oldUsername) r.employee = target; });
+    saveJson(REPORTS_FILE, reports);
+    
+    comments.forEach(c => { if (c.author === oldUsername) c.author = target; });
+    saveJson(COMMENTS_FILE, comments);
+
+    projects.forEach(p => {
+       if (p.manager === oldUsername) p.manager = target;
+       if (p.assignedEmployees) {
+         p.assignedEmployees = p.assignedEmployees.map(a => a === oldUsername ? target : a);
+       }
+       if (p.messages) {
+         p.messages.forEach(m => { 
+           if (m.author === oldUsername) m.author = target; 
+           if (m.replyTo && m.replyTo.author === oldUsername) m.replyTo.author = target;
+         });
+       }
+       if (p.submissions) {
+         p.submissions.forEach(s => { if (s.author === oldUsername) s.author = target; });
+       }
+       if (p.statusByEmployee && p.statusByEmployee[oldUsername]) {
+         p.statusByEmployee[target] = p.statusByEmployee[oldUsername];
+         delete p.statusByEmployee[oldUsername];
+       }
+    });
+    saveProjects();
+  }
+
+  req.session.user.username = target;
+  res.json({ success: true, username: target });
+});
+
 app.get('/api/me', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'Non connecté' });
   const user = await fetchUser(req.session.user.username);
