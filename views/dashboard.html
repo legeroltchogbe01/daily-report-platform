@@ -235,15 +235,45 @@
       padding: 8px 16px;
       border-bottom: 1px solid var(--glass-border);
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     .bell-toolbar label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.78rem;
+      gap: 6px;
+      font-size: 0.75rem;
       color: var(--text-2);
       cursor: pointer;
     }
+    .bell-filter-btns { display: flex; gap: 4px; }
+    .bell-filter-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-3);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 120ms ease;
+    }
+    .bell-filter-btn:hover { color: var(--text-1); }
+    .bell-filter-btn.active { background: rgba(255,255,255,0.08); color: var(--primary-light); border-color: var(--glass-border); }
+    .notif-del-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-3);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0.6;
+      transition: all 120ms ease;
+    }
+    .notif-del-btn:hover { opacity: 1; color: var(--danger); background: rgba(239,68,68,0.15); }
     .bell-toolbar input[type="checkbox"] { accent-color: var(--primary); }
     .bell-list { overflow-y: auto; flex: 1; padding: 8px; }
     .bell-empty { text-align: center; padding: 32px 16px; color: var(--text-3); font-size: 0.85rem; }
@@ -1234,9 +1264,14 @@
           </div>
         </div>
         <div class="bell-toolbar">
-          <label>
+          <div class="bell-filter-btns">
+            <button class="bell-filter-btn active" onclick="document.querySelectorAll('.bell-filter-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); setNotifFilter('all');">Toutes</button>
+            <button class="bell-filter-btn" onclick="document.querySelectorAll('.bell-filter-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); setNotifFilter('unread');">Non lues</button>
+            <button class="bell-filter-btn" onclick="document.querySelectorAll('.bell-filter-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); setNotifFilter('project');">Projets</button>
+          </div>
+          <label title="Activer les alertes navigateur en arrière-plan">
             <input type="checkbox" id="prefNative" onchange="if(this.checked) requestNativePermission()" />
-            Notifications natives
+            Natives
           </label>
         </div>
         <div class="bell-list" id="bellList"><div class="bell-empty">Aucune notification.</div></div>
@@ -1352,26 +1387,84 @@ const seenFor   = pid => state.lastSeen[pid] || { cahierAt:'', msgCount:0, fileC
 /* =====================================================================
    UTILS
    ===================================================================== */
-function playNotificationSound() {
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtxClass) audioCtx = new AudioCtxClass();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+document.addEventListener('click', () => { getAudioContext(); }, { once: true });
+document.addEventListener('touchstart', () => { getAudioContext(); }, { once: true });
+
+function playNotificationSound(level = 'info') {
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(523.25, now); // C5
-    osc.frequency.setValueAtTime(659.25, now + 0.12); // E5
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.5);
+
+    if (level === 'success') {
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.08);
+      osc.frequency.setValueAtTime(783.99, now + 0.16);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.18, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } else if (level === 'project') {
+      osc.frequency.setValueAtTime(659.25, now);
+      osc.frequency.setValueAtTime(880.00, now + 0.1);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (level === 'warning') {
+      osc.frequency.setValueAtTime(349.23, now);
+      osc.frequency.setValueAtTime(293.66, now + 0.12);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else if (level === 'error') {
+      osc.frequency.setValueAtTime(392.00, now);
+      osc.frequency.setValueAtTime(261.63, now + 0.1);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } else {
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(783.99, now + 0.09);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    }
   } catch (err) {
-    console.warn('Audio play failed:', err);
+    console.warn('Audio chime error:', err);
   }
 }
 const fmtDate = iso => {
@@ -1404,8 +1497,9 @@ const LEVEL_META = {
   project: { icon:'📣', label:'Projet',   dur:5000 }
 };
 
-const loadNotifs  = () => { try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]'); } catch { return []; } };
-const saveNotifs  = list => localStorage.setItem(NOTIF_KEY, JSON.stringify(list.slice(0, NOTIF_MAX)));
+const getNotifKey = () => 'drp.notifs.v3_' + (state.user && state.user.username ? state.user.username : 'guest');
+const loadNotifs  = () => { try { return JSON.parse(localStorage.getItem(getNotifKey()) || '[]'); } catch { return []; } };
+const saveNotifs  = list => localStorage.setItem(getNotifKey(), JSON.stringify(list.slice(0, NOTIF_MAX)));
 const loadPrefs   = () => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch { return {}; } };
 const savePrefs   = p => localStorage.setItem(PREFS_KEY, JSON.stringify(p));
 
@@ -1423,9 +1517,9 @@ function notify(level, title, desc, opts = {}) {
   saveNotifs(hist);
   renderBell();
 
-  // Play notification chime
+  // Play level-specific notification chime
   if (!opts.silent) {
-    playNotificationSound();
+    playNotificationSound(level);
   }
 
   // Toast
@@ -1457,6 +1551,20 @@ function notify(level, title, desc, opts = {}) {
   }
 }
 
+let notifFilter = 'all';
+
+function setNotifFilter(filter) {
+  notifFilter = filter;
+  renderBell();
+}
+
+function deleteSingleNotif(e, id) {
+  e.stopPropagation();
+  const hist = loadNotifs().filter(n => String(n.id) !== String(id));
+  saveNotifs(hist);
+  renderBell();
+}
+
 function renderBell() {
   const hist   = loadNotifs();
   const unread = hist.filter(n => !n.read).length;
@@ -1485,8 +1593,18 @@ function renderBell() {
 
   const list = document.getElementById('bellList');
   if (!list) return;
-  if (hist.length === 0) { list.innerHTML = '<div class="bell-empty">Aucune notification.</div>'; return; }
-  list.innerHTML = hist.map(n => {
+
+  // Filter history
+  let filtered = hist;
+  if (notifFilter === 'unread')  filtered = hist.filter(n => !n.read);
+  if (notifFilter === 'project') filtered = hist.filter(n => n.level === 'project');
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="bell-empty">${notifFilter === 'all' ? 'Aucune notification.' : 'Aucune notification correspondante.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(n => {
     const meta = LEVEL_META[n.level] || LEVEL_META.info;
     return `
       <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}" data-pid="${n.projectId || ''}" data-tab="${n.tab || ''}">
@@ -1496,8 +1614,10 @@ function renderBell() {
           ${n.desc ? `<div class="notif-desc">${esc(n.desc)}</div>` : ''}
           <div class="notif-time">${fmtDate(n.ts)}</div>
         </div>
+        <button class="notif-del-btn" onclick="deleteSingleNotif(event, '${n.id}')" title="Supprimer">×</button>
       </div>`;
   }).join('');
+
   list.querySelectorAll('.notif-item').forEach(el => {
     el.onclick = () => {
       const id  = el.getAttribute('data-id');

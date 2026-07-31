@@ -41,7 +41,16 @@ Cliquez sur votre **badge de profil** (nom + initiales) en haut à droite du tab
 2. Cliquez sur **Supprimer mon compte** et confirmez l'alerte.
 3. Votre compte et vos données personnelles seront définitivement supprimés, et vous serez réorienté vers la page de connexion.
 
-> **Note :** Le compte administrateur principal (`boss`) ne peut pas être supprimé.
+---
+
+### 3. Palette & Sons de Notifications 🔔
+
+- 🔊 **Effets Sonores Adaptatifs** : Chaque notification émet un carillon audio distinct via l'API Web Audio (succès, alerte projet, erreur, info).
+- 🎨 **Palette de Notifications** : Cliquez sur l'icône de cloche 🔔 pour ouvrir la palette interactive :
+  - **Filtres intelligents** : basculez entre **Toutes**, **Non lues** ou **Projets**.
+  - **Gestion individuelle** : cliquez sur la croix (×) pour supprimer une notification spécifique.
+  - **Tout lire / Vider** : boutons rapides d'action en haut de palette.
+- 👤 **Isolation par Utilisateur** : Les notifications sont isolées de manière étanche par compte (`username`) — un utilisateur ne verra jamais les alertes d'un autre utilisateur.
 
 ---
 
