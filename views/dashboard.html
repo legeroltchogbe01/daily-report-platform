@@ -598,27 +598,35 @@
     .messages-container {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
+      width: 100%;
+      overflow: hidden;
     }
     .messages-list {
       max-height: 420px;
       overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       gap: 10px;
       padding: 4px 2px;
+      width: 100%;
     }
     .messages-list::-webkit-scrollbar { width: 6px; }
     .messages-list::-webkit-scrollbar-track { background: transparent; }
     .messages-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 
     .msg-bubble {
-      max-width: 75%;
+      max-width: 80%;
+      min-width: 0;
       background: rgba(255,255,255,0.05);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
       padding: 10px 14px;
       animation: bubble-in 200ms ease;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      overflow: hidden;
     }
     .msg-bubble.own {
       align-self: flex-end;
@@ -631,28 +639,37 @@
     .msg-author.own { color: var(--primary-light); }
     .msg-time   { font-size: 0.67rem; color: var(--text-3); }
     .msg-text   { font-size: 0.88rem; color: var(--text-1); line-height: 1.5; }
-    .msg-img-inline { display: block; max-width: 240px; max-height: 200px; border-radius: 10px; margin-top: 8px; cursor: pointer; border: 1px solid var(--glass-border); }
+    .msg-img-inline { display: block; max-width: 100%; width: auto; max-height: 220px; border-radius: 10px; margin-top: 8px; cursor: pointer; border: 1px solid var(--glass-border); object-fit: cover; }
     .msg-attach-chip {
-      display: inline-flex;
-      align-items: center;
+      display: flex;
+      align-items: flex-start;
       gap: 6px;
       margin-top: 8px;
-      padding: 6px 12px;
+      padding: 8px 12px;
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--glass-border);
-      border-radius: 999px;
+      border-radius: 12px;
       font-size: 0.78rem;
       color: var(--text-2);
       text-decoration: none;
       transition: all 150ms ease;
+      max-width: 100%;
+      overflow: hidden;
+      word-break: break-all;
+      overflow-wrap: break-word;
+      flex-wrap: wrap;
     }
+    .msg-attach-chip .muted { flex-shrink: 0; white-space: nowrap; }
     .msg-attach-chip:hover { border-color: var(--primary); color: var(--primary-light); }
 
     .msg-input-area {
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--glass-border);
       border-radius: var(--radius-md);
-      padding: 14px;
+      padding: 12px;
+      width: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
     }
     .msg-preview {
       display: flex;
@@ -668,13 +685,14 @@
     }
     .msg-preview .thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .msg-preview .rem { margin-left: auto; background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1.1rem; font-family: 'Inter', sans-serif; }
-    .msg-input-row { display: flex; gap: 8px; align-items: center; }
+    .msg-input-row { display: flex; gap: 8px; align-items: center; width: 100%; overflow: hidden; }
     .msg-input-row input[type=text] {
       flex: 1;
+      min-width: 0; /* critical: allows flex child to shrink below content size */
       background: var(--bg-card);
       border: 1px solid var(--glass-border);
       border-radius: 999px;
-      padding: 10px 16px;
+      padding: 10px 14px;
       font-family: 'Inter', sans-serif;
       font-size: 0.88rem;
       color: var(--text-1);
@@ -682,7 +700,7 @@
       transition: border-color 150ms ease;
     }
     .msg-input-row input:focus { border-color: var(--primary); }
-    .msg-input-row input::placeholder { color: var(--text-3); }
+    .msg-input-row input::placeholder { color: var(--text-3); font-size: 0.82rem; }
 
     /* Progress bar */
     .progress-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 8px; overflow: hidden; }
@@ -1082,7 +1100,8 @@
       .detail-title { font-size: 1.2rem; }
 
       /* Chat input */
-      .msg-input-row { gap: 6px !important; }
+      .msg-bubble { max-width: 88%; }
+      .msg-input-row { gap: 5px !important; }
       #msgSendBtn {
         width: 38px;
         height: 38px;
