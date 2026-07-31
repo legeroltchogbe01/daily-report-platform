@@ -636,12 +636,14 @@ const createProjectSubmission = async (project, employee, submissionType, text, 
   return submission;
 };
 
-const addProjectMessage = async (project, author, text, attachment = null) => {
+const addProjectMessage = async (project, author, text, attachments = [], replyTo = null) => {
+  const atts = Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []);
   const message = {
-    id: Date.now(),
+    id: Date.now() + Math.floor(Math.random() * 1000),
     author,
     text,
-    attachment,
+    attachments: atts,
+    replyTo,
     createdAt: new Date().toISOString()
   };
   if (useDb) {
@@ -1011,29 +1013,39 @@ app.post('/api/projects/:id/messages', async (req, res) => {
     return res.status(403).json({ error: 'Vous n’êtes pas assigné à ce projet.' });
   }
   const text = (req.body.text || '').trim();
+  let replyTo = null;
+  if (req.body.replyTo) {
+    try { replyTo = req.body.replyTo; } catch (e) {}
+  }
   if (!text) return res.status(400).json({ error: 'Le message est requis.' });
-  const message = await addProjectMessage(project, req.session.user.username, text);
+  const message = await addProjectMessage(project, req.session.user.username, text, [], replyTo);
   res.json(message);
 });
 
-// Message with optional attachment (multipart). If 'attachment' file is present,
-// it is uploaded via storeFile() (local disk or Cloudinary based on STORAGE_PROVIDER).
-app.post('/api/projects/:id/messages/attachment', upload.single('attachment'), async (req, res) => {
+// Message with optional attachment (multipart).
+app.post('/api/projects/:id/messages/attachment', upload.array('attachment', 10), async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'Non connecté' });
   const access = await ensureProjectAccess(req, res);
   if (!access) return;
   const text = (req.body.text || '').trim();
-  let attachment = null;
-  if (req.file) {
+  let replyTo = null;
+  if (req.body.replyTo) {
+    try { replyTo = JSON.parse(req.body.replyTo); } catch (e) {}
+  }
+  let attachments = [];
+  if (req.files && req.files.length) {
     try {
-      attachment = await storeFile(req.file);
+      for (const file of req.files) {
+        const stored = await storeFile(file);
+        attachments.push(stored);
+      }
     } catch (err) {
-      console.error('Error uploading message attachment to storage:', err);
-      return res.status(500).json({ error: 'Erreur lors de l’enregistrement du fichier joint.' });
+      console.error('Error uploading message attachments to storage:', err);
+      return res.status(500).json({ error: 'Erreur lors de l’enregistrement des fichiers joints.' });
     }
   }
-  if (!text && !attachment) return res.status(400).json({ error: 'Message vide (texte ou fichier requis).' });
-  const message = await addProjectMessage(access.project, req.session.user.username, text, attachment);
+  if (!text && attachments.length === 0) return res.status(400).json({ error: 'Message vide (texte ou fichier requis).' });
+  const message = await addProjectMessage(access.project, req.session.user.username, text, attachments, replyTo);
   res.json(message);
 });
 

@@ -639,6 +639,20 @@
     .msg-author.own { color: var(--primary-light); }
     .msg-time   { font-size: 0.67rem; color: var(--text-3); }
     .msg-text   { font-size: 0.88rem; color: var(--text-1); line-height: 1.5; }
+    .msg-reply-quote {
+      border-left: 3px solid var(--primary-light);
+      background: rgba(0,0,0,0.15);
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      border-radius: 4px 8px 8px 4px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .msg-reply-author { font-weight: 700; font-size: 0.72rem; color: var(--primary-light); margin-bottom: 2px; }
+    .msg-actions { display: none; position: absolute; right: 10px; top: 10px; gap: 4px; }
+    .msg-bubble:hover .msg-actions { display: flex; }
+    .msg-bubble { position: relative; } /* Ensure relative positioning for .msg-actions */
     .msg-img-inline { display: block; max-width: 100%; width: auto; max-height: 220px; border-radius: 10px; margin-top: 8px; cursor: pointer; border: 1px solid var(--glass-border); object-fit: cover; }
     .msg-attach-chip {
       display: flex;
@@ -1319,7 +1333,8 @@ const state = {
   poller: null,
   // Track which project IDs we've already fired unseen toasts for in this session
   seenToastsFired: new Set(),
-  selectedMsgFile: null,
+  msgFiles: [],
+  msgReplyTo: null,
   choosingFile: false
 };
 
@@ -2102,6 +2117,8 @@ function renderCahier(host) {
 /* ---- Messages ---- */
 function renderMessages(host) {
   const pid = pId();
+  state.msgFiles = [];
+  state.msgReplyTo = null;
   host.innerHTML = `
     <div class="messages-container">
       <div class="messages-list" id="messagesList">
@@ -2109,12 +2126,13 @@ function renderMessages(host) {
         ${state.messages.length === 0 ? '<div class="empty-state" style="padding:30px"><div class="empty-icon">💬</div><div class="empty-title">Aucun message</div><div class="empty-desc">Commencez la conversation !</div></div>' : ''}
       </div>
       <div class="msg-input-area">
-        <div id="msgPreview"></div>
+        <div id="msgReplyPreview"></div>
+        <div id="msgPreview" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
         <div class="msg-input-row" style="display:flex; align-items:center; gap:8px;">
           <!-- 1. Paperclip File Input -->
           <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
             <div class="attach-btn" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; margin: 0; font-size: 1.15rem;">📎</div>
-            <input type="file" id="msgFileInput" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.pdf,.doc,.docx,.txt,.csv,.json,.zip" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; padding: 0; border: none; background: transparent;" onchange="onMsgFileChange()" onclick="state.choosingFile = true" />
+            <input type="file" id="msgFileInput" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.pdf,.doc,.docx,.txt,.csv,.json,.zip" multiple style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; padding: 0; border: none; background: transparent;" onchange="onMsgFileChange()" onclick="state.choosingFile = true" />
           </div>
           
           <!-- 2. Camera Capture Input -->
@@ -2151,40 +2169,93 @@ function renderMessages(host) {
     </div>
   `;
   renderMsgPreview();
+  renderMsgReplyPreview();
   scrollMsgs();
   const inp = document.getElementById('msgInput');
   if (inp) inp.focus();
 }
 
+function scrollToMsg(msgId) {
+  const el = document.getElementById('msg-' + msgId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.backgroundColor = 'rgba(255,255,255,0.15)';
+    setTimeout(() => el.style.backgroundColor = '', 1500);
+  }
+}
+
+function setReplyMessage(msgId) {
+  const m = state.messages.find(x => x.id === msgId || x.id === parseInt(msgId, 10) || String(x.id) === String(msgId));
+  if (m) {
+    state.msgReplyTo = { id: m.id, author: m.author, text: m.text };
+    renderMsgReplyPreview();
+    const inp = document.getElementById('msgInput');
+    if (inp) inp.focus();
+  }
+}
+
+function renderMsgReplyPreview() {
+  const preview = document.getElementById('msgReplyPreview');
+  if (!preview) return;
+  if (!state.msgReplyTo) {
+    preview.innerHTML = '';
+    return;
+  }
+  preview.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px; margin-bottom:8px; border-left:3px solid var(--primary-light);">
+      <div style="flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:0.8rem;">
+        <span style="color:var(--primary-light); font-weight:700; margin-right:6px;">Réponse à ${esc(state.msgReplyTo.author)}</span>
+        <span style="color:var(--text-2);">${esc(state.msgReplyTo.text || 'Pièce jointe')}</span>
+      </div>
+      <button class="btn-icon" style="padding:4px; margin-left:8px;" onclick="state.msgReplyTo = null; renderMsgReplyPreview();">×</button>
+    </div>
+  `;
+}
+
 function msgBubbleHtml(m) {
   const own   = m.author === state.user.username;
-  const att   = m.attachment || null;
-  const isImg = att && (att.mimeType || '').startsWith('image/');
-  const isAudio = att && ((att.mimeType || '').startsWith('audio/') || (att.originalName || '').endsWith('.webm') || (att.originalName || '').endsWith('.ogg') || (att.originalName || '').endsWith('.mp3') || (att.originalName || '').endsWith('.wav') || (att.originalName || '').endsWith('.m4a'));
+  const replyHtml = m.replyTo ? `
+    <div class="msg-reply-quote" onclick="scrollToMsg('${m.replyTo.id}')">
+      <div class="msg-reply-author">${esc(m.replyTo.author)}</div>
+      <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(m.replyTo.text || 'Pièce jointe')}</div>
+    </div>
+  ` : '';
+
+  const atts = Array.isArray(m.attachments) && m.attachments.length > 0 ? m.attachments : (m.attachment ? [m.attachment] : []);
+  let attsHtml = '';
+  atts.forEach(att => {
+    const isImg = (att.mimeType || '').startsWith('image/');
+    const isAudio = ((att.mimeType || '').startsWith('audio/') || (att.originalName || '').endsWith('.webm') || (att.originalName || '').endsWith('.ogg') || (att.originalName || '').endsWith('.mp3') || (att.originalName || '').endsWith('.wav') || (att.originalName || '').endsWith('.m4a'));
+    if (isImg) {
+      attsHtml += `<a href="${att.url}" target="_blank" rel="noopener"><img class="msg-img-inline" src="${att.url}" alt="${esc(att.originalName||att.filename||'image')}" /></a>`;
+    } else if (isAudio) {
+      attsHtml += `<div style="margin-top:8px;"><audio src="${att.url}" controls style="max-width:100%; height:40px; border-radius:10px;"></audio></div>`;
+    } else {
+      attsHtml += `<a class="msg-attach-chip" href="${att.url}" target="_blank" rel="noopener">📎 ${esc(att.originalName||att.filename||'fichier')} <span class="muted">(${formatSize(att.size)})</span></a>`;
+    }
+  });
+
   return `
-    <div class="msg-bubble ${own ? 'own' : ''}">
+    <div class="msg-bubble ${own ? 'own' : ''}" id="msg-${m.id}" style="transition: background-color 0.5s;">
+      <div class="msg-actions">
+        <button class="btn-icon" style="padding:4px; font-size:0.8rem; background:rgba(255,255,255,0.1); border-radius:50%;" onclick="setReplyMessage('${m.id}')" title="Répondre">↩️</button>
+      </div>
       <div class="msg-meta">
         <span class="msg-author ${own ? 'own' : ''}">${esc(m.author)}</span>
         <span class="msg-time">${fmtDate(m.createdAt || m.created_at)}</span>
       </div>
+      ${replyHtml}
       ${m.text ? `<div class="msg-text">${esc(m.text)}</div>` : ''}
-      ${att ? (isImg
-        ? `<a href="${att.url}" target="_blank" rel="noopener"><img class="msg-img-inline" src="${att.url}" alt="${esc(att.originalName||att.filename||'image')}" /></a>`
-        : isAudio
-          ? `<div style="margin-top:8px;"><audio src="${att.url}" controls style="max-width:100%; height:40px; border-radius:10px;"></audio></div>`
-          : `<a class="msg-attach-chip" href="${att.url}" target="_blank" rel="noopener">📎 ${esc(att.originalName||att.filename||'fichier')} <span class="muted">(${formatSize(att.size)})</span></a>`) : ''}
+      ${attsHtml}
     </div>
   `;
 }
 
 function onMsgCameraChange() {
   const input = document.getElementById('msgCameraInput');
-  if (!input || !input.files || !input.files.length) {
-    state.selectedMsgFile = null;
-    renderMsgPreview();
-    return;
-  }
-  state.selectedMsgFile = input.files[0];
+  if (!input || !input.files || !input.files.length) return;
+  state.msgFiles.push(...Array.from(input.files));
+  input.value = '';
   renderMsgPreview();
 }
 
@@ -2207,7 +2278,7 @@ async function startAudioRecording() {
         const ext = mime.includes('mp4') ? 'm4a' : 'webm';
         const blob = new Blob(state.audioChunks, { type: mime });
         const file = new File([blob], `note-vocale-${Date.now()}.${ext}`, { type: mime });
-        state.selectedMsgFile = file;
+        state.msgFiles.push(file);
         renderMsgPreview();
       }
     };
@@ -2240,62 +2311,68 @@ function stopAudioRecording(save) {
 
 function onMsgFileChange() {
   const input = document.getElementById('msgFileInput');
-  if (!input || !input.files || !input.files.length) {
-    state.selectedMsgFile = null;
-    renderMsgPreview();
-    return;
-  }
-  state.selectedMsgFile = input.files[0];
+  if (!input || !input.files || !input.files.length) return;
+  state.msgFiles.push(...Array.from(input.files));
+  input.value = '';
   renderMsgPreview();
 }
 
 function renderMsgPreview() {
   const preview = document.getElementById('msgPreview');
   if (!preview) return;
-  const f = state.selectedMsgFile;
-  if (!f) {
-    preview.innerHTML = '';
-    return;
-  }
-  const isImage = (f.type || '').startsWith('image/');
-  const blobUrl = isImage ? URL.createObjectURL(f) : '';
-  preview.innerHTML = `
-    <div class="msg-preview">
-      <div class="thumb">${isImage ? `<img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block" />` : '📄'}</div>
-      <div style="flex:1;overflow:hidden;min-width:0">
-        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.83rem">${esc(f.name)}</div>
-        <div class="muted">${formatSize(f.size)}</div>
+  preview.innerHTML = '';
+  state.msgFiles.forEach((f, idx) => {
+    const isImage = (f.type || '').startsWith('image/');
+    const blobUrl = isImage ? URL.createObjectURL(f) : '';
+    preview.innerHTML += `
+      <div class="msg-preview" style="margin-bottom:8px;">
+        <div class="thumb">${isImage ? `<img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block" />` : '📄'}</div>
+        <div style="flex:1;overflow:hidden;min-width:0">
+          <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.83rem">${esc(f.name)}</div>
+          <div class="muted">${formatSize(f.size)}</div>
+        </div>
+        <button type="button" class="rem" onclick="removeMsgFile(${idx})">×</button>
       </div>
-      <button type="button" class="rem" onclick="clearMsgFile()">×</button>
-    </div>
-  `;
+    `;
+  });
 }
 
-function clearMsgFile() {
-  state.selectedMsgFile = null;
+function removeMsgFile(index) {
+  state.msgFiles.splice(index, 1);
+  renderMsgPreview();
+}
+
+function clearMsgFiles() {
+  state.msgFiles = [];
   const inp = document.getElementById('msgFileInput');
   if (inp) inp.value = '';
-  const pv = document.getElementById('msgPreview');
-  if (pv) pv.innerHTML = '';
+  renderMsgPreview();
 }
 
 async function postMessage(id) {
   const input = document.getElementById('msgInput');
   if (!input) return;
   const text     = input.value.trim();
-  const file      = state.selectedMsgFile;
-  if (!text && !file) { input.focus(); return; }
+  const files    = state.msgFiles;
+  if (!text && files.length === 0) { input.focus(); return; }
 
   const btn = document.getElementById('msgSendBtn');
   if (btn) btn.disabled = true;
   try {
-    const url = file ? `/api/projects/${id}/messages/attachment` : `/api/projects/${id}/messages`;
+    const url = files.length > 0 ? `/api/projects/${id}/messages/attachment` : `/api/projects/${id}/messages`;
     let res;
-    if (file) {
-      const fd = new FormData(); fd.append('text', text); fd.append('attachment', file);
+    if (files.length > 0) {
+      const fd = new FormData(); 
+      fd.append('text', text); 
+      if (state.msgReplyTo) {
+        fd.append('replyTo', JSON.stringify(state.msgReplyTo));
+      }
+      files.forEach(f => fd.append('attachment', f));
       res = await fetch(url, { method:'POST', body: fd });
     } else {
-      res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text}) });
+      const payload = { text };
+      if (state.msgReplyTo) payload.replyTo = state.msgReplyTo;
+      res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     }
     if (!res.ok) { const d = await res.json().catch(() => ({})); notify('error','Échec',''+( d.error || `HTTP ${res.status}`)); return; }
     const m = await res.json();
@@ -2303,10 +2380,12 @@ async function postMessage(id) {
     markSeen(state.currentProject);
     saveSeen();
     input.value = '';
-    clearMsgFile();
+    clearMsgFiles();
+    state.msgReplyTo = null;
+    renderMsgReplyPreview();
+    
     const list = document.getElementById('messagesList');
     if (list) {
-      // Remove empty state if present
       const emptyState = list.querySelector('.empty-state');
       if (emptyState) emptyState.remove();
       list.insertAdjacentHTML('beforeend', msgBubbleHtml(m));
