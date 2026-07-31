@@ -564,18 +564,19 @@
     .sub-tabs::-webkit-scrollbar { display: none; }
     .sub-tab {
       flex: 1;
-      min-width: 80px;
-      padding: 8px 14px;
+      padding: 9px 8px;
       background: transparent;
       border: none;
       border-radius: 10px;
       color: var(--text-2);
-      font-size: 0.83rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 150ms ease;
       font-family: 'Inter', sans-serif;
       text-align: center;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
     }
     .sub-tab:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
     .sub-tab.active { background: var(--primary-bg); color: var(--primary-light); }
@@ -603,13 +604,13 @@
       overflow: hidden;
     }
     .messages-list {
-      max-height: 420px;
+      max-height: 450px;
       overflow-y: auto;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 4px 2px;
+      gap: 16px;
+      padding: 6px 4px;
       width: 100%;
     }
     .messages-list::-webkit-scrollbar { width: 6px; }
@@ -626,7 +627,6 @@
       animation: bubble-in 200ms ease;
       word-break: break-word;
       overflow-wrap: break-word;
-      overflow: hidden;
     }
     .msg-bubble.own {
       align-self: flex-end;
@@ -2063,10 +2063,10 @@ function renderProjectDetail() {
     </div>
 
     <div class="sub-tabs">
-      <button class="sub-tab ${state.subTab==='cahier'   ?'active':''}" onclick="switchSubTab('cahier')">📋 Cahier</button>
-      <button class="sub-tab ${state.subTab==='messages' ?'active':''}" onclick="switchSubTab('messages')">💬 Messages</button>
-      <button class="sub-tab ${state.subTab==='rapport'  ?'active':''}" onclick="switchSubTab('rapport')">📊 Rapport</button>
-      <button class="sub-tab ${state.subTab==='files'    ?'active':''}" onclick="switchSubTab('files')">📁 Fichiers</button>
+      <button class="sub-tab ${state.subTab==='cahier'   ?'active':''}" onclick="switchSubTab('cahier')">Cahier</button>
+      <button class="sub-tab ${state.subTab==='messages' ?'active':''}" onclick="switchSubTab('messages')">Messages</button>
+      <button class="sub-tab ${state.subTab==='rapport'  ?'active':''}" onclick="switchSubTab('rapport')">Rapport</button>
+      <button class="sub-tab ${state.subTab==='files'    ?'active':''}" onclick="switchSubTab('files')">Fichiers</button>
     </div>
 
     <div id="subTabContent"></div>
