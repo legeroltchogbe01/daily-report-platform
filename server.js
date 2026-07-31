@@ -391,12 +391,34 @@ const insertUser = async (username, password, role) => {
   return user;
 };
 
-const getEmployeeUsers = async () => {
+const getEmployeeUsers = async (bossUsername = null) => {
+  if (bossUsername) {
+    if (useDb) {
+      const sql = `
+        SELECT DISTINCT u.id, u.username, u.matricule 
+        FROM users u
+        JOIN projects p ON u.username = ANY(p.assigned_employees)
+        WHERE u.role = 'employee' AND p.manager = $1
+        ORDER BY u.username
+      `;
+      const result = await queryDb(sql, [bossUsername]);
+      return result.rows;
+    }
+    const bossProjects = (projects || []).filter(p => p.manager === bossUsername);
+    const assignedUsernames = new Set();
+    bossProjects.forEach(p => {
+      (p.assigned_employees || p.assignedEmployees || []).forEach(emp => assignedUsernames.add(emp));
+    });
+    return (users || [])
+      .filter(u => u.role === 'employee' && assignedUsernames.has(u.username))
+      .map(u => ({ id: u.id, username: u.username, matricule: u.matricule }));
+  }
+
   if (useDb) {
-    const result = await queryDb('SELECT id, username FROM users WHERE role = $1 ORDER BY username', ['employee']);
+    const result = await queryDb('SELECT id, username, matricule FROM users WHERE role = $1 ORDER BY username', ['employee']);
     return result.rows;
   }
-  return users.filter(u => u.role === 'employee').map(u => ({ id: u.id, username: u.username }));
+  return (users || []).filter(u => u.role === 'employee').map(u => ({ id: u.id, username: u.username, matricule: u.matricule }));
 };
 
 const getProjectById = async id => {
@@ -719,7 +741,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
   const login = normalizeUsername(username);
   if (!login || !password || password.length < 4) {
     return res.status(400).json({ error: 'Nom d’utilisateur et mot de passe (min 4 caractères) requis.' });
@@ -728,7 +750,8 @@ app.post('/register', async (req, res) => {
   if (existing) {
     return res.status(400).json({ error: 'Ce nom d’utilisateur existe déjà.' });
   }
-  const newUser = await insertUser(login, password, 'employee');
+  const userRole = (role === 'boss') ? 'boss' : 'employee';
+  const newUser = await insertUser(login, password, userRole);
   req.session.user = { id: newUser.id, username: newUser.username, role: newUser.role };
   res.json({ success: true, role: newUser.role });
 });
@@ -778,7 +801,7 @@ app.post('/api/change-password', async (req, res) => {
 
 app.get('/api/users', async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'boss') return res.status(403).json({ error: 'Accès refusé' });
-  const usersList = await getEmployeeUsers();
+  const usersList = await getEmployeeUsers(req.session.user.username);
   res.json(usersList);
 });
 

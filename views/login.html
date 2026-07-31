@@ -177,7 +177,8 @@
     }
 
     input[type="text"],
-    input[type="password"] {
+    input[type="password"],
+    select {
       width: 100%;
       background: var(--input-bg);
       border: 1px solid var(--input-border);
@@ -190,7 +191,11 @@
       transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
       -webkit-appearance: none;
     }
-    input:focus {
+    select option {
+      background: #0d1527;
+      color: #f8fafc;
+    }
+    input:focus, select:focus {
       border-color: var(--primary);
       background: rgba(99,102,241,0.08);
       box-shadow: 0 0 0 3px var(--input-focus);
@@ -386,7 +391,20 @@
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
-            <input id="username" type="text" placeholder="ex: employee1" autocomplete="username" />
+            <input id="username" type="text" placeholder="ex: entreprise1" autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="field" id="roleField" style="display:none;">
+          <label for="roleSelect">Type de compte</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <select id="roleSelect">
+              <option value="boss">💼 Entreprise / Manager (Boss)</option>
+              <option value="employee">👤 Employé</option>
+            </select>
           </div>
         </div>
 
@@ -466,6 +484,7 @@
         document.getElementById('btnLabel').textContent   = registerMode ? "S'inscrire" : 'Se connecter';
         document.getElementById('toggleBtn').textContent  = registerMode ? 'Se connecter' : 'Créer un compte';
         document.getElementById('switchText').textContent = registerMode ? 'Vous avez déjà un compte ?' : 'Pas encore de compte ?';
+        document.getElementById('roleField').style.display = registerMode ? 'block' : 'none';
         document.getElementById('message').textContent    = '';
         document.getElementById('message').className      = 'msg';
         fb.classList.remove('fading');
@@ -492,10 +511,11 @@
 
       try {
         const url = registerMode ? '/register' : '/login';
+        const role = registerMode ? document.getElementById('roleSelect').value : undefined;
         const res  = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password, role })
         });
         const data = await res.json();
         if (res.ok && data.success) {

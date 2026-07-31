@@ -1704,8 +1704,8 @@ async function renderEmployees(host) {
   host.innerHTML = `
     <div class="page-header">
       <div>
-        <div class="page-title">Équipe</div>
-        <div class="page-subtitle">Liste des employés de la plateforme</div>
+        <div class="page-title">Mes Employés</div>
+        <div class="page-subtitle">Chargement des membres de votre équipe…</div>
       </div>
     </div>
     <div class="loading-box"><div class="loading-ring"></div>Chargement…</div>
@@ -1714,18 +1714,26 @@ async function renderEmployees(host) {
   state.employees = res.ok ? await res.json() : [];
 
   const grid = state.employees.length === 0
-    ? `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">Aucun employé</div><div class="empty-desc">Aucun compte employé enregistré pour le moment.</div></div>`
+    ? `<div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <div class="empty-title">Aucun employé attribué</div>
+        <div class="empty-desc">Pour ajouter un employé à votre équipe, créez ou modifiez un projet et assignez-le en saisissant son code matricule.</div>
+       </div>`
     : `<div class="project-grid">${state.employees.map(u => `
         <div class="emp-card">
-          <div class="emp-avatar">${esc(u.username.slice(0,2).toUpperCase())}</div>
-          <div><div class="emp-name">${esc(u.username)}</div><div class="emp-role">Employé</div></div>
+          <div class="emp-avatar">${esc((u.username||'EM').slice(0,2).toUpperCase())}</div>
+          <div>
+            <div class="emp-name">${esc(u.username)}</div>
+            <div class="emp-role">Employé attribué</div>
+            ${u.matricule ? `<div class="emp-mat" style="font-size:0.75rem; color:var(--primary-light); margin-top:3px; font-weight:600;">Matricule : ${esc(u.matricule)}</div>` : ''}
+          </div>
         </div>`).join('')}</div>`;
 
   host.innerHTML = `
     <div class="page-header">
       <div>
-        <div class="page-title">Équipe</div>
-        <div class="page-subtitle">${state.employees.length} membre(s) enregistré(s)</div>
+        <div class="page-title">Mes Employés (${state.employees.length})</div>
+        <div class="page-subtitle">Liste des employés auxquels vous avez attribué des projets</div>
       </div>
     </div>
     ${grid}
