@@ -767,6 +767,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
+app.get('/super-admin', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
+
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const login = normalizeUsername(username);
