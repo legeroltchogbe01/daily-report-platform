@@ -1663,11 +1663,8 @@ const closeModal = () => { document.getElementById('modalHost').innerHTML = ''; 
 function openProfileModal() {
   openModal(`
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <button class="btn btn-secondary-sm" onclick="closeModal()" style="display:inline-flex; align-items:center; gap:4px; font-weight:700; background:rgba(255,255,255,0.08); border:1px solid var(--glass-border); color:var(--text-1); cursor:pointer;">
-        ← Retour
-      </button>
-      <div class="modal-title" style="margin:0; font-size:1.1rem;">Mon Profil &amp; Sécurité</div>
-      <div style="width:70px;"></div>
+      <div class="modal-title" style="margin:0;">Mon Profil &amp; Sécurité</div>
+      <button onclick="closeModal()" style="background:none; border:none; color:var(--text-2); font-size:1.4rem; line-height:1; cursor:pointer; padding:2px 8px; border-radius:6px; transition:all 120ms ease;" onmouseover="this.style.color='var(--text-1)';this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='var(--text-2)';this.style.background='none'" title="Fermer">✕</button>
     </div>
     <div class="modal-help">Utilisateur actif : <strong id="profile-current-name">${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
     ${(state.user.username || '').toLowerCase() === 'tchogbe légérol' ? `
@@ -1709,8 +1706,7 @@ function openProfileModal() {
         <input type="password" id="profile-confirm-pw" placeholder="Confirmer le nouveau mot de passe" style="width:100%; background:var(--bg-deep); border:1px solid var(--glass-border); border-radius:8px; padding:10px; color:var(--text-1); font-family:sans-serif; box-sizing:border-box;" />
       </div>
       <div class="modal-error" id="profile-err"></div>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button class="btn btn-secondary-sm" onclick="closeModal()" style="font-weight:600;">← Retour au tableau de bord</button>
+      <div style="display:flex; justify-content:flex-end;">
         <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour le mot de passe</button>
       </div>
     </div>
