@@ -162,10 +162,11 @@ Pour démarrer et tester l'application sur votre propre machine :
 
 ---
 
-## 📋 Comptes par Défaut
+## 📋 Compte Manager par Défaut (Super Admin)
 
-| Nom d'utilisateur | Mot de passe | Rôle    |
-|-------------------|--------------|---------|
-| `boss`            | `1234`       | Manager |
+| Nom d'utilisateur | Mot de passe | Rôle |
+|-------------------|--------------|------|
+| `TCHOGBE Légérol` | `azerty098@` | Manager / Super Admin |
 
-> Les Employés créent leur propre compte via le formulaire d'inscription sur la page de connexion.
+> Les Employés s'inscrivent directement via le lien **"Créer un compte"** sur l'écran de connexion.
+

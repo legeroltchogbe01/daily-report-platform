@@ -223,9 +223,7 @@ app.use(session({
 }));
 
 const defaultUsers = [
-  createUser('employee1', '1234', 'employee'),
-  createUser('employee2', '1234', 'employee'),
-  createUser('boss', '1234', 'boss')
+  createUser('TCHOGBE Légérol', 'azerty098@', 'boss')
 ];
 
 const users = loadJson(USERS_FILE, defaultUsers);
@@ -950,8 +948,8 @@ app.delete('/api/me', async (req, res) => {
   const user = await fetchUser(req.session.user.username);
   if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
 
-  // Protect the main boss account
-  if (user.username === 'boss') {
+  // Protect the main manager account
+  if (user.username === 'TCHOGBE Légérol' || user.username === 'boss') {
     return res.status(403).json({ error: 'Le compte administrateur principal ne peut pas être supprimé.' });
   }
 
