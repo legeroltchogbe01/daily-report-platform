@@ -1662,7 +1662,13 @@ const closeModal = () => { document.getElementById('modalHost').innerHTML = ''; 
 
 function openProfileModal() {
   openModal(`
-    <div class="modal-title">Mon Profil &amp; Sécurité</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <button class="btn btn-secondary-sm" onclick="closeModal()" style="display:inline-flex; align-items:center; gap:4px; font-weight:700; background:rgba(255,255,255,0.08); border:1px solid var(--glass-border); color:var(--text-1); cursor:pointer;">
+        ← Retour
+      </button>
+      <div class="modal-title" style="margin:0; font-size:1.1rem;">Mon Profil &amp; Sécurité</div>
+      <div style="width:70px;"></div>
+    </div>
     <div class="modal-help">Utilisateur actif : <strong id="profile-current-name">${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
     ${(state.user.username || '').toLowerCase() === 'tchogbe légérol' ? `
     <div style="margin-top:10px; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:10px; font-size:0.83rem; display:flex; align-items:center; justify-content:space-between;">
@@ -1704,7 +1710,7 @@ function openProfileModal() {
       </div>
       <div class="modal-error" id="profile-err"></div>
       <div style="display:flex; justify-content:flex-end; gap:8px;">
-        <button class="btn btn-secondary-sm" onclick="closeModal()">Fermer</button>
+        <button class="btn btn-secondary-sm" onclick="closeModal()" style="font-weight:600;">← Retour au tableau de bord</button>
         <button class="btn btn-primary-sm" onclick="submitChangePassword()">Mettre à jour le mot de passe</button>
       </div>
     </div>
