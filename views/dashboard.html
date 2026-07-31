@@ -1083,6 +1083,10 @@
     .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .muted { color: var(--text-3); font-size: 0.82rem; }
     .danger-text { color: var(--danger); font-size: 0.82rem; }
+    @keyframes recording-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
   </style>
 </head>
 <body>
@@ -2013,15 +2017,40 @@ function renderMessages(host) {
       </div>
       <div class="msg-input-area">
         <div id="msgPreview"></div>
-        <div class="msg-input-row">
+        <div class="msg-input-row" style="display:flex; align-items:center; gap:8px;">
+          <!-- 1. Paperclip File Input -->
           <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
-            <div class="attach-btn" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; margin: 0;">📎</div>
+            <div class="attach-btn" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; margin: 0; font-size: 1.15rem;">📎</div>
             <input type="file" id="msgFileInput" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.pdf,.doc,.docx,.txt,.csv,.json,.zip" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; padding: 0; border: none; background: transparent;" onchange="onMsgFileChange()" onclick="state.choosingFile = true" />
           </div>
+          
+          <!-- 2. Camera Capture Input -->
+          <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
+            <button class="attach-btn" type="button" onclick="document.getElementById('msgCameraInput').click()" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; border: none; background: transparent; cursor: pointer; font-size: 1.15rem;" title="Prendre une photo">📷</button>
+            <input type="file" id="msgCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="onMsgCameraChange()" />
+          </div>
+
+          <!-- 3. Text Message Input -->
           <input type="text" id="msgInput" placeholder="Votre message… (Entrée pour envoyer)" autocomplete="off"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postMessage(${pid})}" />
-          <button type="button" class="btn btn-primary-sm" id="msgSendBtn" onclick="postMessage(${pid})">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postMessage(${pid})}" style="flex:1;" />
+
+          <!-- 4. Audio Recording Bar (Hidden by default) -->
+          <div id="recordingBar" style="display:none; flex:1; align-items:center; justify-content:space-between; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:var(--radius-sm); padding:0 12px; height:38px; color:var(--danger); font-size:0.8rem; font-weight:700; font-family:'Inter',sans-serif;">
+            <span style="display:flex; align-items:center; gap:6px; animation: recording-pulse 1.2s infinite;"><span style="width:8px; height:8px; background:red; border-radius:50%;"></span> Enregistrement audio…</span>
+            <div style="display:flex; gap:12px;">
+              <button type="button" onclick="stopAudioRecording(false)" style="background:none; border:none; color:var(--text-3); font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; padding:0;">Annuler</button>
+              <button type="button" onclick="stopAudioRecording(true)" style="background:none; border:none; color:var(--success); font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; padding:0;">Terminer</button>
+            </div>
+          </div>
+
+          <!-- 5. Microphone Record Button -->
+          <button type="button" class="btn-icon" id="msgRecordBtn" onclick="startAudioRecording()" style="width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); color:var(--text-2); cursor:pointer; flex-shrink:0;" title="Enregistrer un message vocal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </button>
+
+          <!-- 6. Send Button -->
+          <button type="button" class="btn btn-primary-sm" id="msgSendBtn" onclick="postMessage(${pid})" style="padding: 0 14px; height:38px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px; margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Envoyer
           </button>
         </div>
@@ -2038,6 +2067,7 @@ function msgBubbleHtml(m) {
   const own   = m.author === state.user.username;
   const att   = m.attachment || null;
   const isImg = att && (att.mimeType || '').startsWith('image/');
+  const isAudio = att && ((att.mimeType || '').startsWith('audio/') || (att.originalName || '').endsWith('.webm') || (att.originalName || '').endsWith('.ogg') || (att.originalName || '').endsWith('.mp3') || (att.originalName || '').endsWith('.wav') || (att.originalName || '').endsWith('.m4a'));
   return `
     <div class="msg-bubble ${own ? 'own' : ''}">
       <div class="msg-meta">
@@ -2047,9 +2077,72 @@ function msgBubbleHtml(m) {
       ${m.text ? `<div class="msg-text">${esc(m.text)}</div>` : ''}
       ${att ? (isImg
         ? `<a href="${att.url}" target="_blank" rel="noopener"><img class="msg-img-inline" src="${att.url}" alt="${esc(att.originalName||att.filename||'image')}" /></a>`
-        : `<a class="msg-attach-chip" href="${att.url}" target="_blank" rel="noopener">📎 ${esc(att.originalName||att.filename||'fichier')} <span class="muted">(${formatSize(att.size)})</span></a>`) : ''}
+        : isAudio
+          ? `<div style="margin-top:8px;"><audio src="${att.url}" controls style="max-width:100%; height:40px; border-radius:10px;"></audio></div>`
+          : `<a class="msg-attach-chip" href="${att.url}" target="_blank" rel="noopener">📎 ${esc(att.originalName||att.filename||'fichier')} <span class="muted">(${formatSize(att.size)})</span></a>`) : ''}
     </div>
   `;
+}
+
+function onMsgCameraChange() {
+  const input = document.getElementById('msgCameraInput');
+  if (!input || !input.files || !input.files.length) {
+    state.selectedMsgFile = null;
+    renderMsgPreview();
+    return;
+  }
+  state.selectedMsgFile = input.files[0];
+  renderMsgPreview();
+}
+
+async function startAudioRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.audioChunks = [];
+    const options = { mimeType: 'audio/webm' };
+    if (!MediaRecorder.isTypeSupported('audio/webm')) {
+      options.mimeType = 'audio/mp4';
+    }
+    const recorder = new MediaRecorder(stream, options);
+    recorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) state.audioChunks.push(e.data);
+    };
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      if (state.saveAudioRecord) {
+        const mime = options.mimeType;
+        const ext = mime.includes('mp4') ? 'm4a' : 'webm';
+        const blob = new Blob(state.audioChunks, { type: mime });
+        const file = new File([blob], `note-vocale-${Date.now()}.${ext}`, { type: mime });
+        state.selectedMsgFile = file;
+        renderMsgPreview();
+      }
+    };
+    state.mediaRecorder = recorder;
+    state.saveAudioRecord = false;
+    recorder.start();
+
+    document.getElementById('msgInput').style.display = 'none';
+    document.getElementById('recordingBar').style.display = 'flex';
+    document.getElementById('msgRecordBtn').style.color = 'var(--danger)';
+    document.getElementById('msgRecordBtn').style.background = 'rgba(239,68,68,0.1)';
+    state.isRecording = true;
+  } catch (err) {
+    console.error('Mic access failed:', err);
+    notify('error', 'Microphone', 'Impossible d’accéder au microphone. Veuillez vérifier les permissions.');
+  }
+}
+
+function stopAudioRecording(save) {
+  if (!state.mediaRecorder || state.mediaRecorder.state === 'inactive') return;
+  state.saveAudioRecord = save;
+  state.mediaRecorder.stop();
+
+  document.getElementById('msgInput').style.display = '';
+  document.getElementById('recordingBar').style.display = 'none';
+  document.getElementById('msgRecordBtn').style.color = '';
+  document.getElementById('msgRecordBtn').style.background = '';
+  state.isRecording = false;
 }
 
 function onMsgFileChange() {

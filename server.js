@@ -254,6 +254,10 @@ const ALLOWED_MIMES = new Set([
   'audio/mp3',
   'audio/wav',
   'audio/ogg',
+  'audio/webm',
+  'audio/mp4',
+  'audio/x-m4a',
+  'audio/m4a',
   // video
   'video/mp4',
   'video/webm',
@@ -264,7 +268,7 @@ const ALLOWED_EXTS = new Set([
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.rtf', '.txt', '.csv', '.json', '.xml', '.html',
   '.zip', '.rar',
   '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp',
-  '.mp3', '.wav', '.ogg',
+  '.mp3', '.wav', '.ogg', '.m4a',
   '.mp4', '.webm', '.mov'
 ]);
 
