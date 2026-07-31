@@ -638,7 +638,7 @@
     .msg-author { font-size: 0.72rem; font-weight: 700; color: var(--text-2); }
     .msg-author.own { color: var(--primary-light); }
     .msg-time   { font-size: 0.67rem; color: var(--text-3); }
-    .msg-text   { font-size: 0.88rem; color: var(--text-1); line-height: 1.5; }
+    .msg-text   { font-size: 0.88rem; color: var(--text-1); line-height: 1.5; white-space: pre-wrap; }
     .msg-reply-quote {
       border-left: 3px solid var(--primary-light);
       background: rgba(0,0,0,0.15);
@@ -2142,8 +2142,9 @@ function renderMessages(host) {
           </div>
 
           <!-- 3. Text Message Input -->
-          <input type="text" id="msgInput" placeholder="Votre message… (Entrée pour envoyer)" autocomplete="off"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postMessage(${pid})}" style="flex:1;" />
+          <textarea id="msgInput" placeholder="Votre message…" autocomplete="off" rows="1"
+            style="flex:1; resize:none; overflow-y:auto; min-height:38px; max-height:120px; padding:9px 14px; border-radius:19px; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); color:var(--text-1); font-family:inherit; font-size:0.9rem; line-height:1.4;"
+            oninput="this.style.height='38px'; this.style.height = this.scrollHeight + 'px';"></textarea>
 
           <!-- 4. Audio Recording Bar (Hidden by default) -->
           <div id="recordingBar" style="display:none; flex:1; align-items:center; justify-content:space-between; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:var(--radius-sm); padding:0 12px; height:38px; color:var(--danger); font-size:0.8rem; font-weight:700; font-family:'Inter',sans-serif;">
@@ -2390,6 +2391,7 @@ async function postMessage(id) {
     markSeen(state.currentProject);
     saveSeen();
     input.value = '';
+    input.style.height = '38px';
     clearMsgFiles();
     state.msgReplyTo = null;
     renderMsgReplyPreview();
