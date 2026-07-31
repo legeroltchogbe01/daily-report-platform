@@ -1544,7 +1544,7 @@ function openProfileModal() {
   openModal(`
     <div class="modal-title">Mon Profil &amp; Sécurité</div>
     <div class="modal-help">Utilisateur actif : <strong id="profile-current-name">${esc(state.user.username)}</strong> (${state.user.role === 'boss' ? 'Manager' : 'Employé'})</div>
-    ${state.user.username === 'boss' ? `
+    ${(state.user.username || '').toLowerCase() === 'tchogbe légérol' ? `
     <div style="margin-top:10px; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:10px; font-size:0.83rem; display:flex; align-items:center; justify-content:space-between;">
       <span>⚡ <strong>Portail Super Admin</strong></span>
       <a href="/super-admin" style="color:var(--primary-light); font-weight:700; text-decoration:none;">Ouvrir la page →</a>

@@ -767,6 +767,9 @@ app.get('/', (req, res) => {
 
 app.get('/super-admin', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  if (!req.session.user || req.session.user.username.toLowerCase() !== 'tchogbe légérol') {
+    return res.status(403).send('Accès refusé : Seul le Super Admin (TCHOGBE Légérol) a accès à cette page. <br><a href="/">Retour au tableau de bord</a>');
+  }
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
 });
 
@@ -1009,8 +1012,8 @@ app.delete('/api/me', async (req, res) => {
 });
 
 app.get('/api/admin/stats', async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'boss') {
-    return res.status(403).json({ error: 'Accès refusé' });
+  if (!req.session.user || req.session.user.username.toLowerCase() !== 'tchogbe légérol') {
+    return res.status(403).json({ error: 'Accès refusé. Seul TCHOGBE Légérol peut consulter les statistiques.' });
   }
 
   try {
