@@ -57,14 +57,30 @@ const hashPassword = (password, salt) => {
   return crypto.pbkdf2Sync(password, salt, 310000, 32, 'sha256').toString('hex');
 };
 
+let isUsersInitialized = false;
+
+const generateMatricule = () => {
+  let mat = 'EMP-' + Math.floor(10000 + Math.random() * 90000);
+  if (!useDb && isUsersInitialized) {
+    let exists = true;
+    while (exists) {
+      mat = 'EMP-' + Math.floor(10000 + Math.random() * 90000);
+      exists = (users || []).some(u => u.matricule === mat);
+    }
+  }
+  return mat;
+};
+
 const createUser = (username, password, role) => {
   const salt = crypto.randomBytes(16).toString('hex');
+  const matricule = role === 'employee' ? generateMatricule() : null;
   return {
     id: Date.now() + Math.floor(Math.random() * 1000),
     username,
     salt,
     hash: hashPassword(password, salt),
-    role
+    role,
+    matricule
   };
 };
 
@@ -90,6 +106,9 @@ const initDb = async () => {
     hash TEXT NOT NULL,
     role TEXT NOT NULL
   )`);
+
+  // Schema migration: add matricule column
+  await queryDb(`ALTER TABLE users ADD COLUMN IF NOT EXISTS matricule TEXT UNIQUE`);
 
   await queryDb(`CREATE TABLE IF NOT EXISTS reports (
     id BIGSERIAL PRIMARY KEY,
@@ -126,6 +145,7 @@ const initDb = async () => {
     archived BOOLEAN NOT NULL DEFAULT FALSE
   )`);
 
+  // Seeding
   const count = await queryDb('SELECT COUNT(*) FROM users');
   if (Number(count.rows[0].count) === 0) {
     const seedUsers = [
@@ -135,8 +155,15 @@ const initDb = async () => {
     ];
     for (const user of seedUsers) {
       const newUser = createUser(user.username, user.password, user.role);
-      await queryDb('INSERT INTO users (username, salt, hash, role) VALUES ($1,$2,$3,$4)', [newUser.username, newUser.salt, newUser.hash, newUser.role]);
+      await queryDb('INSERT INTO users (username, salt, hash, role, matricule) VALUES ($1,$2,$3,$4,$5)', [newUser.username, newUser.salt, newUser.hash, newUser.role, newUser.matricule]);
     }
+  }
+
+  // Data migration: assign matricules to existing employees
+  const noMatriculeUsers = await queryDb("SELECT id, username FROM users WHERE role = 'employee' AND matricule IS NULL");
+  for (const r of noMatriculeUsers.rows) {
+    const mat = generateMatricule();
+    await queryDb("UPDATE users SET matricule = $1 WHERE id = $2", [mat, r.id]);
   }
 };
 
@@ -168,6 +195,19 @@ const defaultUsers = [
 ];
 
 const users = loadJson(USERS_FILE, defaultUsers);
+isUsersInitialized = true;
+
+// Migration for local JSON users
+let usersMigrated = false;
+users.forEach(u => {
+  if (u.role === 'employee' && !u.matricule) {
+    u.matricule = generateMatricule();
+    usersMigrated = true;
+  }
+});
+if (usersMigrated) {
+  saveJson(USERS_FILE, users);
+}
 const reports = loadJson(REPORTS_FILE, []);
 const comments = loadJson(COMMENTS_FILE, []);
 const projects = loadJson(PROJECTS_FILE, []);
@@ -325,10 +365,20 @@ const fetchUser = async username => {
   return users.find(u => u.username.toLowerCase() === normalizeUsername(username));
 };
 
+const fetchUsernameByMatricule = async matricule => {
+  const cleanMat = (matricule || '').trim().toUpperCase();
+  if (useDb) {
+    const result = await queryDb('SELECT username FROM users WHERE UPPER(matricule) = $1 AND role = $2', [cleanMat, 'employee']);
+    return result.rows[0] ? result.rows[0].username : null;
+  }
+  const user = users.find(u => u.role === 'employee' && (u.matricule || '').trim().toUpperCase() === cleanMat);
+  return user ? user.username : null;
+};
+
 const insertUser = async (username, password, role) => {
   if (useDb) {
     const newUser = createUser(username, password, role);
-    await queryDb('INSERT INTO users (username, salt, hash, role) VALUES ($1,$2,$3,$4)', [newUser.username, newUser.salt, newUser.hash, newUser.role]);
+    await queryDb('INSERT INTO users (username, salt, hash, role, matricule) VALUES ($1,$2,$3,$4,$5)', [newUser.username, newUser.salt, newUser.hash, newUser.role, newUser.matricule]);
     return newUser;
   }
   const user = createUser(username, password, role);
@@ -433,28 +483,28 @@ const saveProject = async project => {
 const getProjectsForUser = async user => {
   if (useDb) {
     if (user.role === 'boss') {
-      const result = await queryDb('SELECT * FROM projects WHERE archived = false ORDER BY created_at DESC');
+      const result = await queryDb('SELECT * FROM projects WHERE manager = $1 AND archived = false ORDER BY created_at DESC', [user.username]);
       return result.rows;
     }
     const result = await queryDb('SELECT * FROM projects WHERE archived = false AND assigned_employees @> $1::jsonb ORDER BY created_at DESC', [JSON.stringify([user.username])]);
     return result.rows;
   }
   return user.role === 'boss'
-    ? projects.filter(p => !p.archived)
+    ? projects.filter(p => p.manager === user.username && !p.archived)
     : projects.filter(p => p.assignedEmployees.includes(user.username) && !p.archived);
 };
 
 const getProjectsArchiveForUser = async user => {
   if (useDb) {
     if (user.role === 'boss') {
-      const result = await queryDb('SELECT * FROM projects WHERE archived = true ORDER BY created_at DESC');
+      const result = await queryDb('SELECT * FROM projects WHERE manager = $1 AND archived = true ORDER BY created_at DESC', [user.username]);
       return result.rows;
     }
     const result = await queryDb('SELECT * FROM projects WHERE archived = true AND assigned_employees @> $1::jsonb ORDER BY created_at DESC', [JSON.stringify([user.username])]);
     return result.rows;
   }
   return user.role === 'boss'
-    ? projects.filter(p => p.archived)
+    ? projects.filter(p => p.manager === user.username && p.archived)
     : projects.filter(p => p.assignedEmployees.includes(user.username) && p.archived);
 };
 
@@ -684,9 +734,16 @@ app.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/me', (req, res) => {
+app.get('/api/me', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'Non connecté' });
-  res.json(req.session.user);
+  const user = await fetchUser(req.session.user.username);
+  if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+  res.json({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    matricule: user.matricule
+  });
 });
 
 app.post('/api/change-password', async (req, res) => {
@@ -802,14 +859,19 @@ app.post('/api/projects', async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'boss') return res.status(403).json({ error: 'Accès refusé' });
   const name = (req.body.name || '').trim();
   const description = (req.body.description || '').trim();
-  const assignees = Array.isArray(req.body.assignees) ? req.body.assignees.map(a => a.trim()).filter(Boolean) : [];
-  if (!name || !description || assignees.length === 0) {
+  const matricules = Array.isArray(req.body.assignees) ? req.body.assignees.map(a => a.trim().toUpperCase()).filter(Boolean) : [];
+  if (!name || !description || matricules.length === 0) {
     return res.status(400).json({ error: 'Nom, cahier de charge et au moins un employé sont requis.' });
   }
-  const existingUsers = await getEmployeeUsers();
-  const invalidUser = assignees.find(username => !existingUsers.some(u => u.username === username));
-  if (invalidUser) return res.status(400).json({ error: `Employé introuvable: ${invalidUser}` });
-  const project = await createProject(name, description, req.session.user.username, assignees);
+  const resolvedUsernames = [];
+  for (const mat of matricules) {
+    const username = await fetchUsernameByMatricule(mat);
+    if (!username) {
+      return res.status(400).json({ error: `Aucun employé trouvé avec le matricule: ${mat}` });
+    }
+    resolvedUsernames.push(username);
+  }
+  const project = await createProject(name, description, req.session.user.username, resolvedUsernames);
   res.json(project);
 });
 
